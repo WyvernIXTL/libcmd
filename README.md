@@ -6,6 +6,6 @@ This library is quite slow and inefficient as
 ```cpp 
 std::find()
 ```
-is used quiete excessively.
+is used quite excessively.
 
 Nevertheless it works, is quiete easy to use and gives flexibility.
