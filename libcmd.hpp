@@ -18,7 +18,7 @@
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
-#include <set>
+#include <unordered_set>
 
 /* ============================================================================================================================== */
 
@@ -133,12 +133,12 @@ public:
 void cmdParser::digest(){
     if(this->isEmpty()) return;
 
-    std::set<std::string> inputStringsNotAlien;
+    std::unordered_set<std::string> inputStringsNotAlien;
 
-    for(auto& elem : _flags) {
+    for (auto& elem : _flags) {
         *(elem.pointer) = false;
         for(auto& hand : elem.hands) {
-            if(_flagExists(_argv, _argv+_argc, hand)) {
+            if (_flagExists(_argv, _argv+_argc, hand)) {
                 *(elem.pointer) = *(elem.pointer) || true;
                 inputStringsNotAlien.insert(hand);
             }      
@@ -146,14 +146,13 @@ void cmdParser::digest(){
     }
 
 
-    std::set<std::string> allHands;
+    std::unordered_set<std::string> allHands;
 
     for(auto& elem : _flags) {
         for(auto& hand : elem.hands) {
             allHands.insert(hand);
         }
     }
-
     for (auto& elem : _options) {
         for(auto& hand : elem.hands) {
             allHands.insert(hand);
