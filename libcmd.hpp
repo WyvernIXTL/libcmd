@@ -18,6 +18,7 @@
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
+#include <set>
 
 /* ============================================================================================================================== */
 
@@ -32,6 +33,19 @@ struct Flag
     std::string description;
 };
 
+Flag make_flag(bool* pointer, std::vector<std::string> hands, std::string description){
+    Flag flaggy;
+    flaggy.pointer = pointer;
+    flaggy.hands = hands;
+    flaggy.description = description;
+    return flaggy;
+}
+
+Flag make_flag(bool* pointer, std::vector<std::string> hands){
+    return make_flag(pointer, hands, "");
+}
+
+
 struct Option
 {
     std::string* pointer;
@@ -42,15 +56,8 @@ struct Option
     int type;
 };
 
-Flag make_flag(bool* pointer, std::vector<std::string> hands, std::string description){
-    Flag flaggy;
-    flaggy.pointer = pointer;
-    flaggy.hands = hands;
-    flaggy.description = description;
-    return flaggy;
-}
 
-Option make_flag(std::string* pointer, std::vector<std::string> hands, std::string description){
+Option make_option(std::string* pointer, std::vector<std::string> hands, std::string description){
     Option flaggy;
     flaggy.pointer = pointer;
     flaggy.hands = hands;
@@ -59,29 +66,10 @@ Option make_flag(std::string* pointer, std::vector<std::string> hands, std::stri
     return flaggy;
 }
 
-Flag make_flag(bool* pointer, std::vector<std::string> hands){
-    return make_flag(pointer, hands, "");
-}
-
-Option make_flag(std::string* pointer, std::vector<std::string> hands){
-    return make_flag(pointer, hands, "");
-}
-
-Flag make_option(bool* pointer, std::vector<std::string> hands, std::string description){
-    return make_flag(pointer, hands, description);
-}
-
-Option make_option(std::string* pointer, std::vector<std::string> hands, std::string description){
-    return make_flag(pointer, hands, description);
-}
-
-Flag make_option(bool* pointer, std::vector<std::string> hands){
-    return make_flag(pointer, hands, "");
-}
-
 Option make_option(std::string* pointer, std::vector<std::string> hands){
-    return make_flag(pointer, hands, "");
+    return make_option(pointer, hands, "");
 }
+
 
 Option make_option(int* pointer, std::vector<std::string> hands, std::string description){
     Option flaggy;
@@ -95,6 +83,7 @@ Option make_option(int* pointer, std::vector<std::string> hands, std::string des
 Option make_option(int* pointer, std::vector<std::string> hands){
     return make_option(pointer, hands, "");
 }
+
 
 Option make_option(double* pointer, std::vector<std::string> hands, std::string description){
     Option flaggy;
@@ -143,71 +132,71 @@ public:
 
 void cmdParser::digest(){
     if(this->isEmpty()) return;
-    std::vector<std::string> inputStringsNotAlien;
-    for(auto& elem : _flags){
+
+    std::set<std::string> inputStringsNotAlien;
+
+    for(auto& elem : _flags) {
         *(elem.pointer) = false;
         for(auto& hand : elem.hands) {
-            if(_flagExists(_argv, _argv+_argc, hand)){
+            if(_flagExists(_argv, _argv+_argc, hand)) {
                 *(elem.pointer) = *(elem.pointer) || true;
-                inputStringsNotAlien.push_back(hand);
+                inputStringsNotAlien.insert(hand);
             }      
         }
     }
-    for(auto& elem : _options){
-        if(elem.type == 1) {
-            *(elem.pointer) = "";
-            for(auto& hand : elem.hands) {
-                if(_flagExists(_argv, _argv+_argc, hand)){
-                    //std::cout << "elempointer=" << *(elem.pointer);
-                    *(elem.pointer) = *(elem.pointer) + _retrieveOption(_argv, _argv+_argc, hand);
-                    //std::cout << "    elempointerafter=" << *(elem.pointer) << std::endl;
-                    inputStringsNotAlien.push_back(hand);
-                    inputStringsNotAlien.push_back(*(elem.pointer));
-                }     
+
+
+    std::set<std::string> allHands;
+
+    for(auto& elem : _flags) {
+        for(auto& hand : elem.hands) {
+            allHands.insert(hand);
+        }
+    }
+
+    for (auto& elem : _options) {
+        for(auto& hand : elem.hands) {
+            allHands.insert(hand);
+        }
+    }
+
+
+    for (auto& elem : _options) {
+        for (auto& hand : elem.hands) {
+            std::string retrievedOption = _retrieveOption(_argv, _argv+_argc, hand);
+            if (retrievedOption != "") {
+                inputStringsNotAlien.insert(hand);
+
+                if ( allHands.find(retrievedOption) == allHands.end() ) {
+                    if (elem.type == 1) {
+                        *(elem.pointer) = retrievedOption;
+                    } else if (elem.type == 2) {
+                        try{
+                            *(elem.pointerInt) = std::stoi(retrievedOption);
+                        } catch (...) {
+                            std::ostringstream oserr;
+                            oserr << "ERROR: Expected type >>int<<, but got: " << retrievedOption;
+                            throw std::invalid_argument( oserr.str() );
+                        }
+                    } else if (elem.type == 3) {
+                        try{
+                            *(elem.pointerDouble) = std::stod(retrievedOption);
+                        } catch (...){
+                            std::ostringstream oserr;
+                            oserr << "ERROR: Expected type >>double<<, but got: " << retrievedOption;
+                            throw std::invalid_argument( oserr.str() );
+                        }
+                    } else {
+                        throw std::invalid_argument( "ERROR: unknown parsing from string to <type>" );
+                    }
+
+                    inputStringsNotAlien.insert(retrievedOption);
+                }                    
             }
-        } else if(elem.type == 2){
-            std::string CacheIntString = "";
-            for(auto& hand : elem.hands) {
-                if(_flagExists(_argv, _argv+_argc, hand)){
-                    CacheIntString = CacheIntString + _retrieveOption(_argv, _argv+_argc, hand);
-                    inputStringsNotAlien.push_back(hand);
-                    inputStringsNotAlien.push_back(CacheIntString);
-                }
-            }
-            if(CacheIntString != ""){
-                try{
-                    *(elem.pointerInt) = std::stoi(CacheIntString);
-                } catch (...){
-                    std::ostringstream oserr;
-                    oserr << "ERROR: Expected type >>int<<, but got: " << CacheIntString;
-                    throw std::invalid_argument( oserr.str() );
-                }
-            }
-        } else if(elem.type == 3){
-            std::string CacheIntString = "";
-            for(auto& hand : elem.hands) {
-                if(_flagExists(_argv, _argv+_argc, hand)){
-                    CacheIntString = CacheIntString + _retrieveOption(_argv, _argv+_argc, hand);
-                    inputStringsNotAlien.push_back(hand);
-                    inputStringsNotAlien.push_back(CacheIntString);
-                }          
-            }
-            if(CacheIntString != ""){
-                try{
-                    *(elem.pointerDouble) = std::stod(CacheIntString);
-                } catch (...){
-                    std::ostringstream oserr;
-                    oserr << "ERROR: Expected type >>double<<, but got: " << CacheIntString;
-                    throw std::invalid_argument( oserr.str() );
-                }
-            }
-        } else {
-            std::cout << "something went wrong" << std::endl;
-            abort();
         }        
     }
-    for(char** itr = _argv + 1; itr != _argv + _argc; ++itr){
-        if(std::find(inputStringsNotAlien.begin(), inputStringsNotAlien.end(), *itr) == inputStringsNotAlien.end()){
+    for(char** itr = _argv + 1; itr != _argv + _argc; ++itr) {
+        if(inputStringsNotAlien.find(*itr) == inputStringsNotAlien.end()) {
             std::ostringstream oserr;
             oserr  << "ERROR: Unknown Argument " << *itr;
             throw std::invalid_argument( oserr.str() );
@@ -216,7 +205,7 @@ void cmdParser::digest(){
     
 }
 
-bool cmdParser::isEmpty(){
+bool cmdParser::isEmpty() {
     if(_argc == 1)
         return true;
     else if(_argc < 1)
@@ -238,7 +227,7 @@ cmdParser::cmdParser(int argc, char* argv[],
 std::string cmdParser::_retrieveOption(char** begin, char** end, const std::string option)
 {
     char** itr = std::find(begin, end, option);
-    if(itr != end && itr + 1 != end){
+    if(itr != end && itr + 1 != end) {
         return *(itr+1);
     }
     return "";
@@ -249,7 +238,7 @@ bool cmdParser::_flagExists(char** begin, char** end, const std::string flag)
     return std::find(begin, end, flag) != end;
 }
 
-std::string space(int n){
+std::string space(int n) {
     if(n <= 0){
         return "";
     }
@@ -259,31 +248,31 @@ std::string space(int n){
     return os.str();
 }
 
-std::string makeHandToString(std::vector<std::string> hand, int handsAmount, int spaces){
+std::string makeHandToString(std::vector<std::string> hand, int handsAmount, int spaces) {
     std::ostringstream os;
-    auto makeRoom = [spaces](std::string& hand){
+    auto makeRoom = [spaces](std::string& hand) {
         return space(spaces - int(hand.length()));
     };
-    for(auto& elem : hand){
+    for(auto& elem : hand) {
         os << elem << makeRoom(elem);
     }
-    for(int i = 0; i < handsAmount - int(hand.size()); ++i){
+    for(int i = 0; i < handsAmount - int(hand.size()); ++i) {
         os << space(spaces);
     }
     return os.str();
 }
 
 template<typename T>
-int getHandCount(std::vector<T> hands){
-    auto max = [](auto a, auto b){
+int getHandCount(std::vector<T> hands) {
+    auto max = [](auto a, auto b) {
         if(a > b)
             return a;
         return b;
     };
     int highest = 0;
-    for(auto elem : hands){
+    for(auto elem : hands) {
         int count = 0;
-        for(auto hand : elem.hands){
+        for(auto hand : elem.hands) {
             count++;
         }
         highest = max(highest, count);
@@ -291,9 +280,9 @@ int getHandCount(std::vector<T> hands){
     return highest;
 }
 
-void cmdParser::printFlags(int spaces){
+void cmdParser::printFlags(int spaces) {
     int amountOfFlags = getHandCount(_flags);
-    for(std::size_t i = 0; i < _flags.size(); ++i){
+    for(std::size_t i = 0; i < _flags.size(); ++i) {
         if(i == 0)
             std::cout << "FLAGS:" << space(spaces-6) << makeHandToString(_flags[i].hands, amountOfFlags, spaces) << _flags[i].description << std::endl;
         else
@@ -301,13 +290,13 @@ void cmdParser::printFlags(int spaces){
     }
 }
 
-void cmdParser::printFlags(){
+void cmdParser::printFlags() {
     printFlags(SPACES);
 }
 
-void cmdParser::printOptions(int spaces){
+void cmdParser::printOptions(int spaces) {
     int amountOfFlags = getHandCount(_options);
-    for(std::size_t i = 0; i < _options.size(); ++i){
+    for(std::size_t i = 0; i < _options.size(); ++i) {
         if(i == 0)
             std::cout << "OPTIONS:" << space(spaces-8) << makeHandToString(_options[i].hands, amountOfFlags, spaces) << _options[i].description << std::endl;
         else
@@ -315,17 +304,17 @@ void cmdParser::printOptions(int spaces){
     }
 }
 
-void cmdParser::printOptions(){
+void cmdParser::printOptions() {
     printOptions(SPACES);
 }
 
-void cmdParser::printAll(int spaces){
+void cmdParser::printAll(int spaces) {
     printFlags(spaces);
     std::cout << " " << std::endl;
     printOptions(spaces);
 }
 
-void cmdParser::printAll(){
+void cmdParser::printAll() {
     printAll(SPACES);
 }
 

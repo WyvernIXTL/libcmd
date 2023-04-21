@@ -140,16 +140,17 @@ TEST_CASE( "parseGoodOptions", "[options]" ) {
 }
 
 TEST_CASE( "parseBadOptions", "[badoptions]" ) {
-    std::string inputStr = "NONE";
-    std::string inputStr2 = "NONE";
-
     std::vector<char*> argv;
-
     argv.push_back("programm");
+
+    SECTION( "options without value" ){
         argv.push_back("-s");
         argv.push_back("-s2");
         argv.push_back("qwertz");
         argv.push_back(nullptr);
+
+        std::string inputStr = "NONE";
+        std::string inputStr2 = "NONE";
 
         cmdParser pars {
             int(argv.size() - 1),
@@ -161,6 +162,45 @@ TEST_CASE( "parseBadOptions", "[badoptions]" ) {
             }
         };
 
-        //REQUIRE(inputStr == "NONE");
+        REQUIRE(inputStr == "NONE");
         REQUIRE(inputStr2 == "qwertz");
+    }
+
+    SECTION( "bad numbers int" ) {
+        argv.push_back("-i");
+        argv.push_back("abc");
+        argv.push_back(nullptr);
+
+        int inputInt = 0;
+
+        REQUIRE_THROWS(
+            [&](){cmdParser pars {
+                int(argv.size() - 1),
+                argv.data(),
+                {},
+                {
+                    make_option(&inputInt, {"-i", "--int"}, "input int"),
+                }
+            };}()
+        );        
+    }
+
+    SECTION( "bad numbers double" ) {
+        argv.push_back("-d");
+        argv.push_back("abc");
+        argv.push_back(nullptr);
+
+        double inputDouble = 0.0;
+
+        REQUIRE_THROWS(
+            [&](){cmdParser pars {
+                int(argv.size() - 1),
+                argv.data(),
+                {},
+                {
+                    make_option(&inputDouble, {"-d", "--double"}, "input double"),
+                }
+            };}()
+        );        
+    }
 }
