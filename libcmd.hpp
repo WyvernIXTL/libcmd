@@ -1,6 +1,6 @@
 
 /*
- * Copyright (C) 2021 Adam McKellar - All Rights Reserved
+ * Copyright (C) 2023 Adam McKellar
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -17,6 +17,7 @@
 #include <algorithm>
 #include <iostream>
 #include <sstream>
+#include <stdexcept>
 
 /* ============================================================================================================================== */
 
@@ -157,7 +158,9 @@ void cmdParser::digest(){
             *(elem.pointer) = "";
             for(auto& hand : elem.hands) {
                 if(_flagExists(_argv, _argv+_argc, hand)){
+                    //std::cout << "elempointer=" << *(elem.pointer);
                     *(elem.pointer) = *(elem.pointer) + _retrieveOption(_argv, _argv+_argc, hand);
+                    //std::cout << "    elempointerafter=" << *(elem.pointer) << std::endl;
                     inputStringsNotAlien.push_back(hand);
                     inputStringsNotAlien.push_back(*(elem.pointer));
                 }     
@@ -175,8 +178,9 @@ void cmdParser::digest(){
                 try{
                     *(elem.pointerInt) = std::stoi(CacheIntString);
                 } catch (...){
-                    std::cout << "ERROR: Expected type >>int<<, but got: " << CacheIntString << std::endl;
-                    abort();
+                    std::ostringstream oserr;
+                    oserr << "ERROR: Expected type >>int<<, but got: " << CacheIntString;
+                    throw std::invalid_argument( oserr.str() );
                 }
             }
         } else if(elem.type == 3){
@@ -192,8 +196,9 @@ void cmdParser::digest(){
                 try{
                     *(elem.pointerDouble) = std::stod(CacheIntString);
                 } catch (...){
-                    std::cout << "ERROR: Expected type >>double<<, but got: " << CacheIntString << std::endl;
-                    abort();
+                    std::ostringstream oserr;
+                    oserr << "ERROR: Expected type >>double<<, but got: " << CacheIntString;
+                    throw std::invalid_argument( oserr.str() );
                 }
             }
         } else {
@@ -203,8 +208,9 @@ void cmdParser::digest(){
     }
     for(char** itr = _argv + 1; itr != _argv + _argc; ++itr){
         if(std::find(inputStringsNotAlien.begin(), inputStringsNotAlien.end(), *itr) == inputStringsNotAlien.end()){
-            std::cout << "ERROR: Unknown Argument " << *itr << std::endl;
-            abort();
+            std::ostringstream oserr;
+            oserr  << "ERROR: Unknown Argument " << *itr;
+            throw std::invalid_argument( oserr.str() );
         }
     }
     
@@ -213,6 +219,10 @@ void cmdParser::digest(){
 bool cmdParser::isEmpty(){
     if(_argc == 1)
         return true;
+    else if(_argc < 1)
+        throw std::invalid_argument( "ERROR: invalid number of arguments (argv <= 0)" );
+    else if(!_argv)
+        throw std::invalid_argument( "ERROR: nullptr given instead of char**" );
     return false;
 }
 
@@ -252,7 +262,7 @@ std::string space(int n){
 std::string makeHandToString(std::vector<std::string> hand, int handsAmount, int spaces){
     std::ostringstream os;
     auto makeRoom = [spaces](std::string& hand){
-        return space(spaces - hand.length());
+        return space(spaces - int(hand.length()));
     };
     for(auto& elem : hand){
         os << elem << makeRoom(elem);
