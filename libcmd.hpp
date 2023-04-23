@@ -19,6 +19,8 @@
 #include <sstream>
 #include <stdexcept>
 #include <unordered_set>
+#include <unordered_map>
+#include <tuple>
 
 /* ============================================================================================================================== */
 
@@ -130,79 +132,60 @@ public:
 
 /* ============================================================================================================================== */
 
-void cmdParser::digest(){
-    if(this->isEmpty()) return;
+void cmdParser::digest() {
+    if (this->isEmpty()) return;
 
-    std::unordered_set<std::string> inputStringsNotAlien;
-
-    for (auto& elem : _flags) {
-        *(elem.pointer) = false;
-        for(auto& hand : elem.hands) {
-            if (_flagExists(_argv, _argv+_argc, hand)) {
-                *(elem.pointer) = *(elem.pointer) || true;
-                inputStringsNotAlien.insert(hand);
-            }      
-        }
-    }
-
-
-    std::unordered_set<std::string> allHands;
-
+    std::unordered_map<std::string, std::tuple<Flag*, Option*>> opt;
     for(auto& elem : _flags) {
         for(auto& hand : elem.hands) {
-            allHands.insert(hand);
+            opt.insert({hand, std::make_tuple(&elem, nullptr)});
         }
     }
     for (auto& elem : _options) {
         for(auto& hand : elem.hands) {
-            allHands.insert(hand);
-        }
-    }
-
-
-    for (auto& elem : _options) {
-        for (auto& hand : elem.hands) {
-            std::string retrievedOption = _retrieveOption(_argv, _argv+_argc, hand);
-            if (retrievedOption != "") {
-                inputStringsNotAlien.insert(hand);
-
-                if ( allHands.find(retrievedOption) == allHands.end() ) {
-                    if (elem.type == 1) {
-                        *(elem.pointer) = retrievedOption;
-                    } else if (elem.type == 2) {
-                        try{
-                            *(elem.pointerInt) = std::stoi(retrievedOption);
-                        } catch (...) {
-                            std::ostringstream oserr;
-                            oserr << "ERROR: Expected type >>int<<, but got: " << retrievedOption;
-                            throw std::invalid_argument( oserr.str() );
-                        }
-                    } else if (elem.type == 3) {
-                        try{
-                            *(elem.pointerDouble) = std::stod(retrievedOption);
-                        } catch (...){
-                            std::ostringstream oserr;
-                            oserr << "ERROR: Expected type >>double<<, but got: " << retrievedOption;
-                            throw std::invalid_argument( oserr.str() );
-                        }
-                    } else {
-                        throw std::invalid_argument( "ERROR: unknown parsing from string to <type>" );
-                    }
-
-                    inputStringsNotAlien.insert(retrievedOption);
-                }                    
-            }
-        }        
-    }
-    for(char** itr = _argv + 1; itr != _argv + _argc; ++itr) {
-        if(inputStringsNotAlien.find(*itr) == inputStringsNotAlien.end()) {
-            std::ostringstream oserr;
-            oserr  << "ERROR: Unknown Argument " << *itr;
-            throw std::invalid_argument( oserr.str() );
+            opt.insert({hand, std::make_tuple(nullptr, &elem)});
         }
     }
     
+
+    for (char** itr = _argv + 1; itr != _argv + _argc; ++itr) {
+        auto hand = opt.find(std::string(*itr));
+        if (hand != opt.end()) {
+            if (std::get<Flag*>(hand->second)) {
+                *((*(std::get<Flag*>(hand->second))).pointer) = true;
+            } else {
+                if (itr + 1 != _argv + _argc) {
+                    if (opt.find(*(itr + 1)) == opt.end()) {
+                        auto elem = (*(std::get<Option*>(hand->second)));
+                        if (elem.type == 1) {
+                            *(elem.pointer) = *(itr + 1);
+                        } else if (elem.type == 2) {
+                            try{
+                                *(elem.pointerInt) = std::stoi(*(itr + 1));
+                            } catch (...) {
+                                std::ostringstream oserr;
+                                oserr << "ERROR: Expected type >>int<<, but got: " << *(itr + 1);
+                                throw std::invalid_argument( oserr.str() );
+                            }
+                        } else if (elem.type == 3) {
+                            try{
+                                *(elem.pointerDouble) = std::stod(*(itr + 1));
+                            } catch (...){
+                                std::ostringstream oserr;
+                                oserr << "ERROR: Expected type >>double<<, but got: " << *(itr + 1);
+                                throw std::invalid_argument( oserr.str() );
+                            }
+                        } else {
+                            throw std::invalid_argument( "ERROR: unknown parsing from string to <type>" );
+                        }
+                    }
+                }
+            }
+        }
+    }
+
 }
+
 
 bool cmdParser::isEmpty() {
     if(_argc == 1)

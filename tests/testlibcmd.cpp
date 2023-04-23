@@ -28,9 +28,9 @@ TEST_CASE( "parseEmptyNoFlagsAndOptions", "[empty]" ) {
 }
 
 TEST_CASE( "parseGoodFlags", "[flags]" ) {
-    bool help;
-    bool verbose;
-    bool flaggy;
+    bool help = false;
+    bool verbose = false;
+    bool flaggy = false;
 
     std::vector<char*> argv;
     argv.push_back("programm");
@@ -113,7 +113,9 @@ TEST_CASE( "parseGoodOptions", "[options]" ) {
 
     }
 
-    SECTION( "overwriting options error" ) {
+
+
+    SECTION( "overwriting options" ) {
 
         argv.push_back("programm");
         argv.push_back("-s");
@@ -122,20 +124,21 @@ TEST_CASE( "parseGoodOptions", "[options]" ) {
         argv.push_back("qwertz");
         argv.push_back(nullptr);
 
-        REQUIRE_THROWS(
-            [&](){cmdParser pars {
-                int(argv.size() - 1),
-                argv.data(),
-                {},
-                {
-                    make_option(&inputStr, {"-s", "--string"}, "input string"),
-                    make_option(&inputInt, {"-i", "--int"}, "input int"),
-                    make_option(&inputDouble, {"-d", "--double"}, "input double"),
-                }
-            };}()
-        );
+        cmdParser pars {
+            int(argv.size() - 1),
+            argv.data(),
+            {},
+            {
+                make_option(&inputStr, {"-s", "--string"}, "input string"),
+                make_option(&inputInt, {"-i", "--int"}, "input int"),
+                make_option(&inputDouble, {"-d", "--double"}, "input double"),
+            }
+        };
+
+        REQUIRE(inputStr == "qwertz");
 
     }
+    
 
 }
 

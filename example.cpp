@@ -42,7 +42,7 @@ int main(int argc, char* argv[]){
     //variables you'll change
     bool help = false;
     bool verbose = false;
-    std::string input;
+    std::string input = "";
     int printCycles = 1;
     double doublingEfforts = 1.0;
 
