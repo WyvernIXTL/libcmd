@@ -37,7 +37,7 @@ int main(int argc, char* argv[]){
                 mode = 1;
             }
         }
-    } catch(std::logic_error){}
+    } catch(std::logic_error const&){}
 
     //variables you'll change
     bool help = false;

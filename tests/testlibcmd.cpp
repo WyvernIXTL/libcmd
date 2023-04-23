@@ -206,4 +206,29 @@ TEST_CASE( "parseBadOptions", "[badoptions]" ) {
             };}()
         );        
     }
+
+    SECTION( "unkown argument" ) {
+        std::string inputStr;
+
+        argv.push_back("programm");
+        argv.push_back("-s");
+        argv.push_back("wasd");
+        argv.push_back("unkown");
+        argv.push_back("-s");
+        argv.push_back("qwertz");
+        argv.push_back(nullptr);
+
+        REQUIRE_THROWS( [&](){
+            cmdParser pars {
+                int(argv.size() - 1),
+                argv.data(),
+                {},
+                {
+                    make_option(&inputStr, {"-s", "--string"}, "input string"),
+                }
+            }; }()
+        );
+
+    }
+
 }

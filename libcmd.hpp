@@ -18,9 +18,7 @@
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
-#include <unordered_set>
 #include <unordered_map>
-#include <tuple>
 
 /* ============================================================================================================================== */
 
@@ -178,9 +176,14 @@ void cmdParser::digest() {
                         } else {
                             throw std::invalid_argument( "ERROR: unknown parsing from string to <type>" );
                         }
+                        ++itr;
                     }
                 }
             }
+        } else {
+            std::ostringstream oserr;
+            oserr << "ERROR: Unkown argument: " << *(itr);
+            throw std::invalid_argument( oserr.str() ); 
         }
     }
 
