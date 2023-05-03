@@ -101,16 +101,12 @@ Option make_option(double* pointer, std::vector<std::string> hands){
 
 /* ============================================================================================================================== */
 
-class cmdParser
-{
+class cmdParser {
 private:
     int _argc;
     char** _argv;
     std::vector<Flag> _flags; //&bool, Shorthand, Long, description 
     std::vector<Option> _options; //&options, Shorthand, Long, description 
-
-    bool _flagExists(char** begin, char** end, const std::string flag);
-    std::string _retrieveOption(char** begin, char** end, const std::string option);
 
 public:
     cmdParser(int argc, char* argv[],
@@ -200,27 +196,12 @@ bool cmdParser::isEmpty() {
     return false;
 }
 
-
 cmdParser::cmdParser(int argc, char* argv[],
         std::vector<Flag> flags,
         std::vector<Option> options)
     : _argc(argc), _argv(argv), _flags(flags), _options(options)
 {
     digest();
-}
-
-std::string cmdParser::_retrieveOption(char** begin, char** end, const std::string option)
-{
-    char** itr = std::find(begin, end, option);
-    if(itr != end && itr + 1 != end) {
-        return *(itr+1);
-    }
-    return "";
-}
-
-bool cmdParser::_flagExists(char** begin, char** end, const std::string flag)
-{
-    return std::find(begin, end, flag) != end;
 }
 
 std::string space(int n) {
