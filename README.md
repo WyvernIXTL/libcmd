@@ -79,7 +79,8 @@ int main(int argc, char* argv[]) {
                   argc - frontOffset - backOffset,
                   argv + frontOffset,
                   {
-                        make_flag(&help, {"-h", "--help", "--Help", "-help", "-H"}, "Shows this message"),
+                        make_flag(&help, {"-h", "--help", "--Help", "-help", "-H"}, 
+                                                                        "Shows this message"),
                         make_flag(&verbose, {"--verbose"})
                   },
                   {
@@ -116,5 +117,5 @@ With front and back offsets it is possible to have programms of such schema:
 For another (actually the same) example take a look at "example.cpp".
 
 ## Licensing
-The file "libcmd.hpp" is licensed under the [MPL 2.0 license](https://mozilla.org/MPL/2.0/).
-The file "example.cpp" and the examples above are under the terms of [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/).
+* The file "libcmd.hpp" is licensed under the [MPL 2.0 license](https://mozilla.org/MPL/2.0/).
+* The file "example.cpp" and the examples above are under the terms of [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/).
