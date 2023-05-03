@@ -100,14 +100,19 @@ int main(int argc, char* argv[]) {
             exit(0);
       }
 
-      if (mode == Mode::CMD1) {
-            //TODO
-      } else if (mode == Mode::CMD2) {
-            //TODO
-      } else if (mode == Mode::CMD3) {
-            //TODO
-      } else {
-            //TODO
+      switch (mode) {
+            case Mode::CMD1:
+                  //TODO
+                  break;
+            case Mode::CMD2:
+                  //TODO
+                  break;
+            case Mode::CMD3:
+                  //TODO
+                  break;
+            default:
+                  std::cout << "no command given" << std::endl;
+                  break;
       }
 }
 ```
