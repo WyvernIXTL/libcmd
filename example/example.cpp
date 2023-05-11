@@ -45,32 +45,27 @@ int main(int argc, char* argv[]){
     // The command line flags and options you wish
     // do not forget those , , , , 
 
-    try {
-
-        cmdParser pars (
-            argc - frontOffset - backOffset,
-            argv + frontOffset,
-            {
-                make_flag(&help, {"-h", "--help", "--Usage"}, "Shows this message"),
-                make_flag(&verbose, {"--verbose"}) //description omited 
-            },
-            {
-                make_option(&input, {"-i", "--input"}, "input string which is then printed"),
-                make_option(&printCycles, {"-cycles", "/Cycles"}, "the number of times input is printed"), 
-                make_option(&doublingEfforts, {"-d", "--double"}, "Double which acts as multiplier for Cycles")
-            }
-        );
-
-        //print Usage when help is necessary
-        //You might want to change pars.isEmpty() to argc == 1
-        if(help || pars.isEmpty()){
-            Usage(pars);
-            return 0;
+    cmdParser pars (
+        argc - frontOffset - backOffset,
+        argv + frontOffset,
+        {
+            make_flag(&help, {"-h", "--help", "--Usage"}, "Shows this message"),
+            make_flag(&verbose, {"--verbose"}) //description omited 
+        },
+        {
+            make_option(&input, {"-i", "--input"}, "input string which is then printed"),
+            make_option(&printCycles, {"-cycles", "/Cycles"}, "the number of times input is printed"), 
+            make_option(&doublingEfforts, {"-d", "--double"}, "Double which acts as multiplier for Cycles")
         }
+    );
 
-    } catch (const std::invalid_argument& e) {
-        std::cout << e.what() << std::endl;
-        exit(0);
+    pars.comfortDigest();
+
+    //print Usage when help is necessary
+    //You might want to change pars.isEmpty() to argc == 1
+    if(help || pars.isEmpty()){
+        Usage(pars);
+        return 0;
     }
 
 

@@ -165,6 +165,7 @@ public:
         std::vector<Option> options);
 
     void digest();
+    void comfortDigest();
     bool isEmpty();
     void printFlags();
     void printFlags(int spaces);
@@ -261,6 +262,19 @@ bool cmdParser::isEmpty() {
 }
 
 /**
+ * @brief Digest which does not throw exceptions but rather prints them and exits the program.
+ * 
+ */
+void cmdParser::comfortDigest() {
+    try {
+        digest();
+    } catch(const std::invalid_argument& e) {
+        std::cout << e.what() << std::endl;
+        exit(1);
+    }
+}
+
+/**
  * @brief Construct a new cmd Parser::cmd Parser object and parse right after.
  * 
  * @param argc Argument count of your main function (probably: "argc").
@@ -272,9 +286,7 @@ cmdParser::cmdParser(int argc, char* argv[],
         std::vector<Flag> flags,
         std::vector<Option> options)
     : _argc(argc), _argv(argv), _flags(flags), _options(options)
-{
-    digest();
-}
+{}
 
 /**
  * @brief Return n white spaces.

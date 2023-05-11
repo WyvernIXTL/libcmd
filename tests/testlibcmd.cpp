@@ -20,6 +20,7 @@ TEST_CASE( "parseEmptyNoFlagsAndOptions", "[empty]" ) {
             {},
             {}
         };
+        pars.digest();
     };
 
     REQUIRE_THROWS( executor(0, nullptr) );
@@ -48,6 +49,7 @@ TEST_CASE( "parseGoodFlags", "[flags]" ) {
         },
         {}
     };
+    pars.digest();
 
     REQUIRE(help);
     REQUIRE(!verbose);
@@ -82,6 +84,7 @@ TEST_CASE( "parseGoodOptions", "[options]" ) {
                 make_option(&inputDouble, {"-d", "--double"}, "input double"),
             }
         };
+        pars.digest();
 
         REQUIRE(inputStr == "wasd");
         REQUIRE(inputInt == 345);
@@ -107,6 +110,7 @@ TEST_CASE( "parseGoodOptions", "[options]" ) {
                 make_option(&inputDouble, {"-d", "--double"}, "input double"),
             }
         };
+        pars.digest();
 
         REQUIRE(inputInt == -345);
         REQUIRE(inputDouble == -345.678);
@@ -134,6 +138,7 @@ TEST_CASE( "parseGoodOptions", "[options]" ) {
                 make_option(&inputDouble, {"-d", "--double"}, "input double"),
             }
         };
+        pars.digest();
 
         REQUIRE(inputStr == "qwertz");
 
@@ -164,6 +169,7 @@ TEST_CASE( "parseBadOptions", "[badoptions]" ) {
                 make_option(&inputStr2, {"-s2", "--string2"}, "input string"),
             }
         };
+        pars.digest();
 
         REQUIRE(inputStr == "NONE");
         REQUIRE(inputStr2 == "qwertz");
@@ -176,16 +182,16 @@ TEST_CASE( "parseBadOptions", "[badoptions]" ) {
 
         int inputInt = 0;
 
-        REQUIRE_THROWS(
-            [&](){cmdParser pars {
-                int(argv.size() - 1),
-                argv.data(),
-                {},
-                {
-                    make_option(&inputInt, {"-i", "--int"}, "input int"),
-                }
-            };}()
-        );        
+        cmdParser pars {
+            int(argv.size() - 1),
+            argv.data(),
+            {},
+            {
+                make_option(&inputInt, {"-i", "--int"}, "input int"),
+            }
+        };
+
+        REQUIRE_THROWS(pars.digest());        
     }
 
     SECTION( "bad numbers double" ) {
@@ -195,16 +201,16 @@ TEST_CASE( "parseBadOptions", "[badoptions]" ) {
 
         double inputDouble = 0.0;
 
-        REQUIRE_THROWS(
-            [&](){cmdParser pars {
-                int(argv.size() - 1),
-                argv.data(),
-                {},
-                {
-                    make_option(&inputDouble, {"-d", "--double"}, "input double"),
-                }
-            };}()
-        );        
+        cmdParser pars {
+            int(argv.size() - 1),
+            argv.data(),
+            {},
+            {
+                make_option(&inputDouble, {"-d", "--double"}, "input double"),
+            }
+        };
+
+        REQUIRE_THROWS(pars.digest());        
     }
 
     SECTION( "unkown argument" ) {
@@ -218,16 +224,16 @@ TEST_CASE( "parseBadOptions", "[badoptions]" ) {
         argv.push_back("qwertz");
         argv.push_back(nullptr);
 
-        REQUIRE_THROWS( [&](){
-            cmdParser pars {
-                int(argv.size() - 1),
-                argv.data(),
-                {},
-                {
-                    make_option(&inputStr, {"-s", "--string"}, "input string"),
-                }
-            }; }()
-        );
+        cmdParser pars {
+            int(argv.size() - 1),
+            argv.data(),
+            {},
+            {
+                make_option(&inputStr, {"-s", "--string"}, "input string"),
+            }
+        };
+
+        REQUIRE_THROWS(pars.digest());
 
     }
 
