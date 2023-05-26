@@ -17,7 +17,6 @@ TEST_CASE( "parseEmptyNoFlagsAndOptions", "[empty]" ) {
         cmdParser pars {
             argc,
             argv,
-            {},
             {}
         };
         pars.digest();
@@ -33,21 +32,16 @@ TEST_CASE( "parseGoodFlags", "[flags]" ) {
     bool verbose = false;
     bool flaggy = false;
 
-    std::vector<char*> argv;
-    argv.push_back("programm");
-    argv.push_back("--help");
-    argv.push_back("wasd");
-    argv.push_back(nullptr);
+    const char* argv[] = {"programm", "--help", "wasd", nullptr};
 
     cmdParser pars {
-        int(argv.size() - 1),
-        argv.data(),
+        3,
+        const_cast<char**>(argv),
         {
-            make_flag(&help, {"-h", "--help", "--Usage"}, "Shows this message"),
-            make_flag(&verbose, {"--verbose"}),
-            make_flag(&flaggy, {"wasd"})
-        },
-        {}
+            Option(&help, {"-h", "--help", "--Usage"}, "Shows this message"),
+            Option(&verbose, {"--verbose"}),
+            Option(&flaggy, {"wasd"})
+        }
     };
     pars.digest();
 
@@ -61,27 +55,18 @@ TEST_CASE( "parseGoodOptions", "[options]" ) {
     int inputInt = 0;
     double inputDouble = 0.0;
 
-    std::vector<char*> argv;
 
     SECTION( "string and postive numbers" ) {
 
-        argv.push_back("programm");
-        argv.push_back("-s");
-        argv.push_back("wasd");
-        argv.push_back("-i");
-        argv.push_back("345");
-        argv.push_back("-d");
-        argv.push_back("345.678");
-        argv.push_back(nullptr);
+        const char* argv[] = {"programm", "-s", "wasd", "-i", "345", "-d", "345.678", nullptr};
 
         cmdParser pars {
-            int(argv.size() - 1),
-            argv.data(),
-            {},
+            7,
+            const_cast<char**>(argv),
             {
-                make_option(&inputStr, {"-s", "--string"}, "input string"),
-                make_option(&inputInt, {"-i", "--int"}, "input int"),
-                make_option(&inputDouble, {"-d", "--double"}, "input double"),
+                Option(&inputStr, {"-s", "--string"}, "input string"),
+                Option(&inputInt, {"-i", "--int"}, "input int"),
+                Option(&inputDouble, {"-d", "--double"}, "input double"),
             }
         };
         pars.digest();
@@ -94,20 +79,14 @@ TEST_CASE( "parseGoodOptions", "[options]" ) {
 
     SECTION( "negative numbers" ){
 
-        argv.push_back("programm");
-        argv.push_back("-i");
-        argv.push_back("-345");
-        argv.push_back("-d");
-        argv.push_back("-345.678");
-        argv.push_back(nullptr);
+        const char* argv[] = {"programm", "-i", "-345", "-d", "-345.678", nullptr};
 
         cmdParser pars {
-            int(argv.size() - 1),
-            argv.data(),
-            {},
+            5,
+            const_cast<char**>(argv),
             {
-                make_option(&inputInt, {"-i", "--int"}, "input int"),
-                make_option(&inputDouble, {"-d", "--double"}, "input double"),
+                Option(&inputInt, {"-i", "--int"}, "input int"),
+                Option(&inputDouble, {"-d", "--double"}, "input double"),
             }
         };
         pars.digest();
@@ -121,21 +100,15 @@ TEST_CASE( "parseGoodOptions", "[options]" ) {
 
     SECTION( "overwriting options" ) {
 
-        argv.push_back("programm");
-        argv.push_back("-s");
-        argv.push_back("wasd");
-        argv.push_back("-s");
-        argv.push_back("qwertz");
-        argv.push_back(nullptr);
+        const char* argv[] = {"programm", "-s", "wasd", "-s", "qwertz", nullptr};
 
         cmdParser pars {
-            int(argv.size() - 1),
-            argv.data(),
-            {},
+            5,
+            const_cast<char**>(argv),
             {
-                make_option(&inputStr, {"-s", "--string"}, "input string"),
-                make_option(&inputInt, {"-i", "--int"}, "input int"),
-                make_option(&inputDouble, {"-d", "--double"}, "input double"),
+                Option(&inputStr, {"-s", "--string"}, "input string"),
+                Option(&inputInt, {"-i", "--int"}, "input int"),
+                Option(&inputDouble, {"-d", "--double"}, "input double"),
             }
         };
         pars.digest();
@@ -148,25 +121,19 @@ TEST_CASE( "parseGoodOptions", "[options]" ) {
 }
 
 TEST_CASE( "parseBadOptions", "[badoptions]" ) {
-    std::vector<char*> argv;
-    argv.push_back("programm");
 
     SECTION( "options without value" ){
-        argv.push_back("-s");
-        argv.push_back("-s2");
-        argv.push_back("qwertz");
-        argv.push_back(nullptr);
+        const char* argv[] = {"programm", "-s", "-s2", "qwertz", nullptr};
 
         std::string inputStr = "NONE";
         std::string inputStr2 = "NONE";
 
         cmdParser pars {
-            int(argv.size() - 1),
-            argv.data(),
-            {},
+            4,
+            const_cast<char**>(argv),
             {
-                make_option(&inputStr, {"-s", "--string"}, "input string"),
-                make_option(&inputStr2, {"-s2", "--string2"}, "input string"),
+                Option(&inputStr, {"-s", "--string"}, "input string"),
+                Option(&inputStr2, {"-s2", "--string2"}, "input string"),
             }
         };
         pars.digest();
@@ -176,18 +143,15 @@ TEST_CASE( "parseBadOptions", "[badoptions]" ) {
     }
 
     SECTION( "bad numbers int" ) {
-        argv.push_back("-i");
-        argv.push_back("abc");
-        argv.push_back(nullptr);
+        const char* argv[] = {"programm", "-i", "abc", nullptr};
 
         int inputInt = 0;
 
         cmdParser pars {
-            int(argv.size() - 1),
-            argv.data(),
-            {},
+            3,
+            const_cast<char**>(argv),
             {
-                make_option(&inputInt, {"-i", "--int"}, "input int"),
+                Option(&inputInt, {"-i", "--int"}, "input int"),
             }
         };
 
@@ -195,18 +159,15 @@ TEST_CASE( "parseBadOptions", "[badoptions]" ) {
     }
 
     SECTION( "bad numbers double" ) {
-        argv.push_back("-d");
-        argv.push_back("abc");
-        argv.push_back(nullptr);
+        const char* argv[] = {"programm", "-d", "abc", nullptr};
 
         double inputDouble = 0.0;
 
         cmdParser pars {
-            int(argv.size() - 1),
-            argv.data(),
-            {},
+            3,
+            const_cast<char**>(argv),
             {
-                make_option(&inputDouble, {"-d", "--double"}, "input double"),
+                Option(&inputDouble, {"-d", "--double"}, "input double"),
             }
         };
 
@@ -216,20 +177,13 @@ TEST_CASE( "parseBadOptions", "[badoptions]" ) {
     SECTION( "unkown argument" ) {
         std::string inputStr;
 
-        argv.push_back("programm");
-        argv.push_back("-s");
-        argv.push_back("wasd");
-        argv.push_back("unkown");
-        argv.push_back("-s");
-        argv.push_back("qwertz");
-        argv.push_back(nullptr);
+        const char* argv[] = {"programm", "-s", "wasd", "unkown", "-s", "qwertz", nullptr};
 
         cmdParser pars {
-            int(argv.size() - 1),
-            argv.data(),
-            {},
+            6,
+            const_cast<char**>(argv),
             {
-                make_option(&inputStr, {"-s", "--string"}, "input string"),
+                Option(&inputStr, {"-s", "--string"}, "input string"),
             }
         };
 

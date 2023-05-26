@@ -49,13 +49,12 @@ int main(int argc, char* argv[]){
         argc - frontOffset - backOffset,
         argv + frontOffset,
         {
-            make_flag(&help, {"-h", "--help", "--Usage"}, "Shows this message"),
-            make_flag(&verbose, {"--verbose"}) //description omited 
-        },
-        {
-            make_option(&input, {"-i", "--input"}, "input string which is then printed"),
-            make_option(&printCycles, {"-cycles", "/Cycles"}, "the number of times input is printed"), 
-            make_option(&doublingEfforts, {"-d", "--double"}, "Double which acts as multiplier for Cycles")
+            Option(&help, {"-h", "--help", "--Usage"}, "Shows this message"),
+            Option(&verbose, {"--verbose"}), //description omited 
+
+            Option(&input, {"-i", "--input"}, "input string which is then printed"),
+            Option(&printCycles, {"-cycles", "/Cycles"}, "the number of times input is printed"), 
+            Option(&doublingEfforts, {"-d", "--double"}, "Double which acts as multiplier for Cycles")
         }
     );
 

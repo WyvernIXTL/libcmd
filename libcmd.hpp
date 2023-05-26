@@ -19,6 +19,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <unordered_map>
+#include <functional>
 
 /* ============================================================================================================================== */
 
@@ -26,120 +27,63 @@ int SPACES = 12;
 
 /* ============================================================================================================================== */
 
-/// @brief Struct for holding a Flag, its hands and description.
-struct Flag
-{
-    bool* pointer;
-    std::vector<std::string> hands;
-    std::string description;
+enum Type {BOOL, STRING, INT, DOUBLE};
+
+/**
+ * Class for handling Options.
+ * 
+ * There are 3 inputs: 
+ * 1. The variable you want to be overwritten by the parsed argument.
+ * 2. All strings to be identified as option/flag.
+ * 3. The description for the help message.
+ */
+class Option {
+private:
+    Type _type;
+    std::vector<std::string> _hands;
+    std::string _description;
+
+public:
+    union {
+        bool* pointerBool;
+        std::string* pointerString;
+        int* pointerInt;
+        double* pointerDouble;
+    };  
+
+    Option (bool* pointer, std::vector<std::string> hands, std::string description = "");
+    Option (std::string* pointer, std::vector<std::string> hands, std::string description = "");
+    Option (int* pointer, std::vector<std::string> hands, std::string description = "");
+    Option (double* pointer, std::vector<std::string> hands, std::string description = "");
+
+    Type getType();
+    std::vector<std::string> getHands();
+    std::string getDescription();
 };
 
-/**
- * @brief Construct a struct including necessary components for parsing and pretty printing.
- * 
- * @param[out] pointer Pointer to bool argument to be overwritten.
- * @param[in] hands Hands of Flag. Example: "-h", "--help", "-H".
- * @param[in] description Description of Flag. Example: "show this message".
- * @return Flag Struct with this information.
- */
-Flag make_flag(bool* pointer, std::vector<std::string> hands, std::string description){
-    Flag flaggy;
-    flaggy.pointer = pointer;
-    flaggy.hands = hands;
-    flaggy.description = description;
-    return flaggy;
+
+Option::Option (bool* pointer, std::vector<std::string> hands, std::string description)
+        : _hands(hands), _description(description), _type(Type::BOOL), pointerBool(pointer) {}
+
+Option::Option (std::string* pointer, std::vector<std::string> hands, std::string description)
+        : _hands(hands), _description(description), _type(Type::STRING), pointerString(pointer) {} 
+
+Option::Option (int* pointer, std::vector<std::string> hands, std::string description)
+        : _hands(hands), _description(description), _type(Type::INT), pointerInt(pointer) {}
+
+Option::Option (double* pointer, std::vector<std::string> hands, std::string description)
+        : _hands(hands), _description(description), _type(Type::DOUBLE), pointerDouble(pointer) {}
+
+Type Option::getType() {
+    return _type;
 }
 
-/**
- * @brief Construct a struct including necessary components for parsing.
- * 
- * @overload
- */
-Flag make_flag(bool* pointer, std::vector<std::string> hands){
-    return make_flag(pointer, hands, "");
+std::vector<std::string> Option::getHands() {
+    return _hands;
 }
 
-/// @brief Struct for holding an Option, its hands and description.
-struct Option
-{
-    std::string* pointer;
-    int* pointerInt;
-    double* pointerDouble;
-    std::vector<std::string> hands;
-    std::string description;
-    int type;
-};
-
-/**
- * @brief Construct a struct including necessary components for parsing and pretty printing.
- * 
- * @param[out] pointer Pointer to Object to be overwritten.
- * @param[in] hands Hands of Flag. Example: "-h", "--help", "-H".
- * @param[in] description Description of Flag. Example: "show this message".
- * @return Option Struct with this information.
- */
-Option make_option(std::string* pointer, std::vector<std::string> hands, std::string description){
-    Option flaggy;
-    flaggy.pointer = pointer;
-    flaggy.hands = hands;
-    flaggy.description = description;
-    flaggy.type = 1;
-    return flaggy;
-}
-
-/**
- * @brief Construct a struct including necessary components for parsing.
- * 
- * @overload
- */
-Option make_option(std::string* pointer, std::vector<std::string> hands){
-    return make_option(pointer, hands, "");
-}
-
-/**
- * @brief Construct a struct including necessary components for parsing and pretty printing.
- * 
- * @overload
- */
-Option make_option(int* pointer, std::vector<std::string> hands, std::string description){
-    Option flaggy;
-    flaggy.pointerInt = pointer;
-    flaggy.hands = hands;
-    flaggy.description = description;
-    flaggy.type = 2;
-    return flaggy;
-}
-
-/**
- * @brief Construct a struct including necessary components for parsing.
- * 
- * @overload
- */
-Option make_option(int* pointer, std::vector<std::string> hands){
-    return make_option(pointer, hands, "");
-}
-
-/**
- * @brief Construct a struct including necessary components for parsing and pretty printing.
- * 
- * @overload
- */
-Option make_option(double* pointer, std::vector<std::string> hands, std::string description){
-    Option flaggy;
-    flaggy.pointerDouble = pointer;
-    flaggy.hands = hands;
-    flaggy.description = description;
-    flaggy.type = 3;
-    return flaggy;
-}
-
-/**
- * @brief Construct a struct including necessary components for parsing.
- * 
- * @overload
- */
-Option make_option(double* pointer, std::vector<std::string> hands){
-    return make_option(pointer, hands, "");
+std::string Option::getDescription() {
+    return _description;
 }
 
 
@@ -156,23 +100,17 @@ class cmdParser {
 private:
     int _argc;
     char** _argv;
-    std::vector<Flag> _flags;
     std::vector<Option> _options;
 
 public:
     cmdParser(int argc, char* argv[],
-        std::vector<Flag> flags,
         std::vector<Option> options);
 
     void digest();
     void comfortDigest();
     bool isEmpty();
-    void printFlags();
-    void printFlags(int spaces);
-    void printOptions();
-    void printOptions(int spaces);
-    void printAll();
-    void printAll(int spaces);
+    void printOptions(int spaces = SPACES, std::string prefix = "", std::function<bool(Type)> include = [](Type a){return true;});
+    void printAll(int spaces = SPACES);
 };
 
 
@@ -188,15 +126,10 @@ public:
 void cmdParser::digest() {
     if (this->isEmpty()) return;
 
-    std::unordered_map<std::string, std::tuple<Flag*, Option*>> opt;
-    for(auto& elem : _flags) {
-        for(auto& hand : elem.hands) {
-            opt.insert({hand, std::make_tuple(&elem, nullptr)});
-        }
-    }
+    std::unordered_map<std::string, Option*> opt;
     for (auto& elem : _options) {
-        for(auto& hand : elem.hands) {
-            opt.insert({hand, std::make_tuple(nullptr, &elem)});
+        for(auto& hand : elem.getHands()) {
+            opt.insert({hand, &elem});
         }
     }
     
@@ -204,32 +137,40 @@ void cmdParser::digest() {
     for (char** itr = _argv + 1; itr != _argv + _argc; ++itr) {
         auto hand = opt.find(std::string(*itr));
         if (hand != opt.end()) {
-            if (std::get<Flag*>(hand->second)) {
-                *((*(std::get<Flag*>(hand->second))).pointer) = true;
+            if (hand->second->getType() == BOOL) {
+                *(hand->second->pointerBool) = true;
             } else {
                 if (itr + 1 != _argv + _argc) {
                     if (opt.find(*(itr + 1)) == opt.end()) {
-                        auto elem = (*(std::get<Option*>(hand->second)));
-                        if (elem.type == 1) {
-                            *(elem.pointer) = *(itr + 1);
-                        } else if (elem.type == 2) {
+                        switch (hand->second->getType()) 
+                        {
+                        case STRING:
+                            *(hand->second->pointerString) = *(itr + 1);
+                            break;
+
+                        case INT:
                             try{
-                                *(elem.pointerInt) = std::stoi(*(itr + 1));
+                                *(hand->second->pointerInt) = std::stoi(*(itr + 1));
                             } catch (...) {
                                 std::ostringstream oserr;
                                 oserr << "ERROR: Expected type >>int<<, but got: " << *(itr + 1);
                                 throw std::invalid_argument( oserr.str() );
                             }
-                        } else if (elem.type == 3) {
+                            break;
+                        
+                        case DOUBLE:
                             try{
-                                *(elem.pointerDouble) = std::stod(*(itr + 1));
+                                *(hand->second->pointerDouble) = std::stod(*(itr + 1));
                             } catch (...){
                                 std::ostringstream oserr;
                                 oserr << "ERROR: Expected type >>double<<, but got: " << *(itr + 1);
                                 throw std::invalid_argument( oserr.str() );
                             }
-                        } else {
+                            break;
+                        
+                        default:
                             throw std::invalid_argument( "ERROR: unknown parsing from string to <type>" );
+                            break;
                         }
                         ++itr;
                     }
@@ -283,9 +224,8 @@ void cmdParser::comfortDigest() {
  * @param options Array or Vector of Option structs given to parse argv.
  */
 cmdParser::cmdParser(int argc, char* argv[],
-        std::vector<Flag> flags,
         std::vector<Option> options)
-    : _argc(argc), _argv(argv), _flags(flags), _options(options)
+    : _argc(argc), _argv(argv), _options(options)
 {}
 
 /**
@@ -329,21 +269,21 @@ std::string makeHandToString(std::vector<std::string> hand, int handsAmount, int
 /**
  * @brief Return the maximum of count of hands of a single Flag or Option of all Flag or Options.
  * 
- * @tparam T Flag or Option.
- * @param hands unintuitively a vector of Flags or a vector of Options.
+ * @param options a vector of Options.
+ * @param include lambda or function deciding which Types to inlcude.
  * @return int Example: If the flag Help has the hands "-help", "--help", "-h", "-H" and has the most hands returns 4.
  */
-template<typename T>
-int getHandCount(std::vector<T> hands) {
+int getHandCount(std::vector<Option> options, std::function<bool(Type)> inlcude = [](Type a){return true;}) {
     auto max = [](auto a, auto b) {
         if(a > b)
             return a;
         return b;
     };
     int highest = 0;
-    for(auto elem : hands) {
+    for(auto option : options) {
+        if (!inlcude(option.getType())) continue;        
         int count = 0;
-        for(auto hand : elem.hands) {
+        for(auto hand : option.getHands()) {
             count++;
         }
         highest = max(highest, count);
@@ -352,46 +292,28 @@ int getHandCount(std::vector<T> hands) {
 }
 
 /**
- * @brief Pretty print all hands of all flags and the description of said flags.
+ * @brief Pretty print options.
  * 
- * @param spaces the amount of spaces between hands of flags.
+ * @param spaces The size of the tabs. Make larger for long options.
+ * @param prefix First line of print gets a prefix.
+ * @param include The data Type of Option you want to include, like BOOL for flags.
  */
-void cmdParser::printFlags(int spaces) {
-    int amountOfFlags = getHandCount(_flags);
-    for(std::size_t i = 0; i < _flags.size(); ++i) {
-        if(i == 0)
-            std::cout << "FLAGS:" << space(spaces-6) << makeHandToString(_flags[i].hands, amountOfFlags, spaces) << _flags[i].description << std::endl;
-        else
-            std::cout << space(spaces) << makeHandToString(_flags[i].hands, amountOfFlags, spaces) << _flags[i].description << std::endl;
+void cmdParser::printOptions(int spaces, std::string prefix, std::function<bool(Type)> include) {
+    int amountOfFlags = getHandCount(_options, include );
+    bool firstLine = true;
+    for(auto& opt : _options) {
+        if (include(opt.getType())) {
+            if (firstLine) {
+                firstLine = false;
+                std::cout << prefix << space(spaces - int(prefix.length()));
+            } else {
+                std::cout << space(spaces);
+            }
+            std::cout << makeHandToString(opt.getHands(), amountOfFlags, spaces) << opt.getDescription() << std::endl;
+        }
     }
 }
 
-/// @brief Pretty print all hands of all flags and the description of said flags.
-/// @overload
-void cmdParser::printFlags() {
-    printFlags(SPACES);
-}
-
-/**
- * @brief Pretty print all hands of all options and description of said options.
- * 
- * @param spaces the amount of spaces between hands of options.
- */
-void cmdParser::printOptions(int spaces) {
-    int amountOfFlags = getHandCount(_options);
-    for(std::size_t i = 0; i < _options.size(); ++i) {
-        if(i == 0)
-            std::cout << "OPTIONS:" << space(spaces-8) << makeHandToString(_options[i].hands, amountOfFlags, spaces) << _options[i].description << std::endl;
-        else
-            std::cout << space(spaces) << makeHandToString(_options[i].hands, amountOfFlags, spaces) << _options[i].description << std::endl;
-    }
-}
-
-/// @brief Pretty print all hands of all options and description of said options.
-/// @overload
-void cmdParser::printOptions() {
-    printOptions(SPACES);
-}
 
 /**
  * @brief Pretty print all hands of all flags and options and description of said structs.
@@ -399,15 +321,10 @@ void cmdParser::printOptions() {
  * @param spaces the amount of spaces between hands.
  */
 void cmdParser::printAll(int spaces) {
-    printFlags(spaces);
+    printOptions(spaces, "FLAGS:", [](Type a){return a == BOOL;});
     std::cout << " " << std::endl;
-    printOptions(spaces);
+    printOptions(spaces, "OPTIONS:", [](Type a){return a != BOOL;});
 }
 
-/// @brief Pretty print all hands of all flags and options and description of said structs.
-/// @overload
-void cmdParser::printAll() {
-    printAll(SPACES);
-}
 
 #endif

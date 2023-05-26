@@ -18,14 +18,13 @@ int main(int argc, char* argv[]) {
       cmdParser pars (
             argc,
             argv,
-            {
-                  make_flag(&help, {"-h", "--help", "--Help", "-help", "-H"}, "Shows this message"),
-                  make_flag(&verbose, {"--verbose"})
-            },
-            {
-                  make_option(&inputString, {"-i", "--input"}, "input string"),
-                  make_option(&inputInteger, {"-n", "--number"}, "input integer"), 
-                  make_option(&inputDouble, {"-d", "--double"}, "input double")
+            {     
+                  Option(&help, {"-h", "--help", "--Help", "-help", "-H"}, "Shows this message"),
+                  Option(&verbose, {"--verbose"}),
+
+                  Option(&inputString, {"-i", "--input"}, "input string"),
+                  Option(&inputInteger, {"-n", "--number"}, "input integer"), 
+                  Option(&inputDouble, {"-d", "--double"}, "input double")
             }
       );
       
