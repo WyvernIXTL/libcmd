@@ -120,6 +120,36 @@ TEST_CASE( "parseGoodOptions", "[options]" ) {
 
 }
 
+
+TEST_CASE( "parseAnonymousOptions", "[anonoptions]") {
+    SECTION( "anon option of all kinds" ) {
+        bool vlog = false;
+        std::string inputStr;
+        int inputInt = 0;
+        double inputDouble = 0.0;
+
+        const char* argv[] = {"programm", "-s", "wasd", "-i", "345", "-d", "345.678", "-vlog", nullptr};
+
+        cmdParser pars {
+            8,
+            const_cast<char**>(argv),
+            {   
+                Option(&vlog, {}, "", {"-vlog"}),
+                Option(&inputStr, {}, "input string", {"-s", "--string"}),
+                Option(&inputInt, {}, "input int", {"-i", "--int"}),
+                Option(&inputDouble, {}, "input double", {"-d", "--double"}),
+            }
+        };
+        pars.digest();
+
+        REQUIRE(vlog);
+        REQUIRE(inputStr == "wasd");
+        REQUIRE(inputInt == 345);
+        REQUIRE(inputDouble == 345.678);
+    }
+}
+
+
 TEST_CASE( "parseBadOptions", "[badoptions]" ) {
 
     SECTION( "options without value" ){

@@ -49,7 +49,7 @@ int main(int argc, char* argv[]){
         argc - frontOffset - backOffset,
         argv + frontOffset,
         {
-            Option(&help, {"-h", "--help", "--Usage"}, "Shows this message"),
+            Option(&help, {"-h", "--help"}, "Shows this message", {"--Usage", "-H", "/H"}),
             Option(&verbose, {"--verbose"}), //description omited 
 
             Option(&input, {"-i", "--input"}, "input string which is then printed"),

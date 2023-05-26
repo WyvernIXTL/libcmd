@@ -19,7 +19,7 @@ int main(int argc, char* argv[]) {
             argc,
             argv,
             {     
-                  Option(&help, {"-h", "--help", "--Help", "-help", "-H"}, "Shows this message"),
+                  Option(&help, {"-h", "--help"}, "Shows this message", {"--Help", "-help", "-H"}),
                   Option(&verbose, {"--verbose"}),
 
                   Option(&inputString, {"-i", "--input"}, "input string"),

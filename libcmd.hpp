@@ -36,11 +36,13 @@ enum Type {BOOL, STRING, INT, DOUBLE};
  * 1. The variable you want to be overwritten by the parsed argument.
  * 2. All strings to be identified as option/flag.
  * 3. The description for the help message.
+ * 4. All strings to be identified as option/flag you do not wish to print.
  */
 class Option {
 private:
     Type _type;
     std::vector<std::string> _hands;
+    std::vector<std::string> _anonymousHands;
     std::string _description;
 
 public:
@@ -51,28 +53,29 @@ public:
         double* pointerDouble;
     };  
 
-    Option (bool* pointer, std::vector<std::string> hands, std::string description = "");
-    Option (std::string* pointer, std::vector<std::string> hands, std::string description = "");
-    Option (int* pointer, std::vector<std::string> hands, std::string description = "");
-    Option (double* pointer, std::vector<std::string> hands, std::string description = "");
+    Option (bool* pointer, std::vector<std::string> hands, std::string description = "", std::vector<std::string> anonymousHands = {});
+    Option (std::string* pointer, std::vector<std::string> hands, std::string description = "", std::vector<std::string> anonymousHands = {});
+    Option (int* pointer, std::vector<std::string> hands, std::string description = "", std::vector<std::string> anonymousHands = {});
+    Option (double* pointer, std::vector<std::string> hands, std::string description = "", std::vector<std::string> anonymousHands = {});
 
     Type getType();
     std::vector<std::string> getHands();
     std::string getDescription();
+    std::vector<std::string> getAnonymousHands();
 };
 
 
-Option::Option (bool* pointer, std::vector<std::string> hands, std::string description)
-        : _hands(hands), _description(description), _type(Type::BOOL), pointerBool(pointer) {}
+Option::Option (bool* pointer, std::vector<std::string> hands, std::string description, std::vector<std::string> anonymousHands)
+        : _hands(hands), _description(description), _type(Type::BOOL), pointerBool(pointer), _anonymousHands(anonymousHands) {}
 
-Option::Option (std::string* pointer, std::vector<std::string> hands, std::string description)
-        : _hands(hands), _description(description), _type(Type::STRING), pointerString(pointer) {} 
+Option::Option (std::string* pointer, std::vector<std::string> hands, std::string description, std::vector<std::string> anonymousHands)
+        : _hands(hands), _description(description), _type(Type::STRING), pointerString(pointer), _anonymousHands(anonymousHands) {} 
 
-Option::Option (int* pointer, std::vector<std::string> hands, std::string description)
-        : _hands(hands), _description(description), _type(Type::INT), pointerInt(pointer) {}
+Option::Option (int* pointer, std::vector<std::string> hands, std::string description, std::vector<std::string> anonymousHands)
+        : _hands(hands), _description(description), _type(Type::INT), pointerInt(pointer), _anonymousHands(anonymousHands) {}
 
-Option::Option (double* pointer, std::vector<std::string> hands, std::string description)
-        : _hands(hands), _description(description), _type(Type::DOUBLE), pointerDouble(pointer) {}
+Option::Option (double* pointer, std::vector<std::string> hands, std::string description, std::vector<std::string> anonymousHands)
+        : _hands(hands), _description(description), _type(Type::DOUBLE), pointerDouble(pointer), _anonymousHands(anonymousHands) {}
 
 Type Option::getType() {
     return _type;
@@ -84,6 +87,10 @@ std::vector<std::string> Option::getHands() {
 
 std::string Option::getDescription() {
     return _description;
+}
+
+std::vector<std::string> Option::getAnonymousHands() {
+    return _anonymousHands;
 }
 
 
@@ -129,6 +136,9 @@ void cmdParser::digest() {
     std::unordered_map<std::string, Option*> opt;
     for (auto& elem : _options) {
         for(auto& hand : elem.getHands()) {
+            opt.insert({hand, &elem});
+        }
+        for(auto& hand : elem.getAnonymousHands()) {
             opt.insert({hand, &elem});
         }
     }
