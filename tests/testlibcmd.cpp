@@ -14,10 +14,10 @@
 
 TEST_CASE( "parseEmptyNoFlagsAndOptions", "[empty]" ) {
     auto executor = [](int argc, char** argv) {
-        cmdParser pars {
+        CmdParser pars {
             argc,
             argv,
-            {}, []{}, []{}
+            {}
         };
         pars.digest();
     };
@@ -34,14 +34,14 @@ TEST_CASE( "parseGoodFlags", "[flags]" ) {
 
     const char* argv[] = {"programm", "--help2", "wasd", nullptr};
 
-    cmdParser pars {
+    CmdParser pars {
         3,
         const_cast<char**>(argv),
         {
             Option(&help, {"-h2", "--help2", "--Usage2"}, "Shows this message"),
             Option(&verbose, {"--verbose"}),
             Option(&flaggy, {"wasd"})
-        }, []{}, []{}
+        }
     };
     pars.digest();
 
@@ -60,14 +60,14 @@ TEST_CASE( "parseGoodOptions", "[options]" ) {
 
         const char* argv[] = {"programm", "-s", "wasd", "-i", "345", "-d", "345.678", nullptr};
 
-        cmdParser pars {
+        CmdParser pars {
             7,
             const_cast<char**>(argv),
             {
                 Option(&inputStr, {"-s", "--string"}, "input string"),
                 Option(&inputInt, {"-i", "--int"}, "input int"),
                 Option(&inputDouble, {"-d", "--double"}, "input double"),
-            }, []{}, []{}
+            }
         };
         pars.digest();
 
@@ -81,13 +81,13 @@ TEST_CASE( "parseGoodOptions", "[options]" ) {
 
         const char* argv[] = {"programm", "-i", "-345", "-d", "-345.678", nullptr};
 
-        cmdParser pars {
+        CmdParser pars {
             5,
             const_cast<char**>(argv),
             {
                 Option(&inputInt, {"-i", "--int"}, "input int"),
                 Option(&inputDouble, {"-d", "--double"}, "input double"),
-            }, []{}, []{}
+            }
         };
         pars.digest();
 
@@ -102,14 +102,14 @@ TEST_CASE( "parseGoodOptions", "[options]" ) {
 
         const char* argv[] = {"programm", "-s", "wasd", "-s", "qwertz", nullptr};
 
-        cmdParser pars {
+        CmdParser pars {
             5,
             const_cast<char**>(argv),
             {
                 Option(&inputStr, {"-s", "--string"}, "input string"),
                 Option(&inputInt, {"-i", "--int"}, "input int"),
                 Option(&inputDouble, {"-d", "--double"}, "input double"),
-            }, []{}, []{}
+            }
         };
         pars.digest();
 
@@ -130,7 +130,7 @@ TEST_CASE( "parseAnonymousOptions", "[anonoptions]") {
 
         const char* argv[] = {"programm", "-s", "wasd", "-i", "345", "-d", "345.678", "-vlog", nullptr};
 
-        cmdParser pars {
+        CmdParser pars {
             8,
             const_cast<char**>(argv),
             {   
@@ -138,7 +138,7 @@ TEST_CASE( "parseAnonymousOptions", "[anonoptions]") {
                 Option(&inputStr, {}, "input string", {"-s", "--string"}),
                 Option(&inputInt, {}, "input int", {"-i", "--int"}),
                 Option(&inputDouble, {}, "input double", {"-d", "--double"}),
-            }, []{}, []{}
+            }
         };
         pars.digest();
 
@@ -158,13 +158,13 @@ TEST_CASE( "parseBadOptions", "[badoptions]" ) {
         std::string inputStr = "NONE";
         std::string inputStr2 = "NONE";
 
-        cmdParser pars {
+        CmdParser pars {
             4,
             const_cast<char**>(argv),
             {
                 Option(&inputStr, {"-s", "--string"}, "input string"),
                 Option(&inputStr2, {"-s2", "--string2"}, "input string"),
-            }, []{}, []{}
+            }
         };
         pars.digest();
 
@@ -177,12 +177,12 @@ TEST_CASE( "parseBadOptions", "[badoptions]" ) {
 
         int inputInt = 0;
 
-        cmdParser pars {
+        CmdParser pars {
             3,
             const_cast<char**>(argv),
             {
                 Option(&inputInt, {"-i", "--int"}, "input int"),
-            }, []{}, []{}
+            }
         };
 
         REQUIRE_THROWS(pars.digest());        
@@ -193,12 +193,12 @@ TEST_CASE( "parseBadOptions", "[badoptions]" ) {
 
         double inputDouble = 0.0;
 
-        cmdParser pars {
+        CmdParser pars {
             3,
             const_cast<char**>(argv),
             {
                 Option(&inputDouble, {"-d", "--double"}, "input double"),
-            }, []{}, []{}
+            }
         };
 
         REQUIRE_THROWS(pars.digest());        
@@ -209,16 +209,164 @@ TEST_CASE( "parseBadOptions", "[badoptions]" ) {
 
         const char* argv[] = {"programm", "-s", "wasd", "unkown", "-s", "qwertz", nullptr};
 
-        cmdParser pars {
+        CmdParser pars {
             6,
             const_cast<char**>(argv),
             {
                 Option(&inputStr, {"-s", "--string"}, "input string"),
-            }, []{}, []{}
+            }
         };
 
         REQUIRE_THROWS(pars.digest());
 
     }
 
+}
+
+
+TEST_CASE( "parseSubcommands", "parsesubcommands" ) {
+    SECTION( "one subcommand" ) {
+        std::string inputStr;
+        bool subGotCalled = false;
+
+        const char* argv[] = {"programm", "sub", "-s", "wasd", nullptr};
+
+        CmdParser pars {
+            4,
+            const_cast<char**>(argv),
+            {
+                Option(&inputStr, {"-s", "--string"}, "input string")
+            },
+            {
+                CmdParser(
+                    {
+                        Option(&inputStr, {"-s", "--string"}, "input string")
+                    },
+                    "sub",
+                    &subGotCalled
+                )
+            }
+        };
+
+        pars.digest();
+
+        REQUIRE(subGotCalled);
+        REQUIRE(inputStr == "wasd");
+    }
+
+    SECTION( "more subcommands" ) {
+        std::string inputStr;
+        int num = 0;
+        double dub = 0.0;
+        bool flag = false;
+
+        bool subGotCalled = false;
+        bool bahwaGotCalled = false;
+        bool buhuGotCalled = false;
+
+        const char* argv[] = {"programm", "sub", "BAHWA", "-s2", "wasd", "--num", "6", "--dub", "345.567", "--flag",  nullptr};
+
+        CmdParser pars {
+            10,
+            const_cast<char**>(argv),
+            {
+                Option(&inputStr, {"-s", "--string"}, "input string")
+            },
+            {
+                CmdParser(
+                    {
+                        Option(&inputStr, {"-s", "--string"}, "input string")
+                    },
+                    "sub",
+                    &subGotCalled,
+                    {
+                        CmdParser(
+                            {
+                                Option(&inputStr, {"-s2", "--string2"}, "input string")
+                            },
+                            "buhu",
+                            &buhuGotCalled
+                        ),
+                        CmdParser(
+                            {
+                                Option(&inputStr, {"-s2", "--string2"}, "input string"),
+                                Option(&num, {"--num"}),
+                                Option(&dub, {"--dub"}),
+                                Option(&flag, {"--flag"})
+                            },
+                            "BAHWA",
+                            &bahwaGotCalled
+                        )
+                    }
+                )
+            }
+        };
+
+        pars.digest();
+
+        REQUIRE(!subGotCalled);
+        REQUIRE(bahwaGotCalled);
+        REQUIRE(!buhuGotCalled);
+        REQUIRE(num == 6);
+        REQUIRE(dub == 345.567);
+        REQUIRE(flag);
+        REQUIRE(inputStr == "wasd");
+    }
+
+    SECTION( "deep recursion" ) {
+        std::string inputStr;
+        int num = 0;
+        double dub = 0.0;
+        bool flag = false;
+
+        bool subGotCalled = false;
+        bool bahwaGotCalled = false;
+
+        const char* argv[] = {"programm", "sub", "subsub", "BAHWA", "-s2", "wasd", "--num", "6", "--dub", "345.567", "--flag",  nullptr};
+
+        CmdParser pars {
+            11,
+            const_cast<char**>(argv),
+            {
+                Option(&inputStr, {"-s", "--string"}, "input string")
+            },
+            {
+                CmdParser(
+                    {
+                        Option(&inputStr, {"-s", "--string"}, "input string")
+                    },
+                    "sub",
+                    &subGotCalled,
+                    {
+                        CmdParser(
+                            {},
+                            "subsub",
+                            nullptr,
+                            {
+                                CmdParser(
+                                    {
+                                        Option(&inputStr, {"-s2", "--string2"}, "input string"),
+                                        Option(&num, {"--num"}),
+                                        Option(&dub, {"--dub"}),
+                                        Option(&flag, {"--flag"})
+                                    },
+                                    "BAHWA",
+                                    &bahwaGotCalled
+                                )
+                            }
+                        )
+                    }
+                )
+            }
+        };
+
+        pars.digest();
+
+        REQUIRE(!subGotCalled);
+        REQUIRE(bahwaGotCalled);
+        REQUIRE(num == 6);
+        REQUIRE(dub == 345.567);
+        REQUIRE(flag);
+        REQUIRE(inputStr == "wasd");
+    }
 }

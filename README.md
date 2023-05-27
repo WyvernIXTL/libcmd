@@ -14,7 +14,7 @@ int main(int argc, char* argv[]) {
       int inputInteger = 0;
       double inputDouble = 0.0;
 
-      cmdParser pars (
+      CmdParser pars (
             argc,
             argv,
             {     
