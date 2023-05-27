@@ -9,6 +9,20 @@
 #include "../libcmd.hpp"
 
 
+std::string programDescription = R"(
+Example Program by Adam McKellar
+
+Usage:      example [SubCommands] [Options]
+
+Examples:   example print -i abc -cycles 10 -d 0.5
+            example print bakeice
+)";
+
+std::string licenseText = R"(
+This example program is licensed under CC0 1.0 apart from the used libraries
+)";
+
+
 int main(int argc, char* argv[]){
 
     // control flow variables
@@ -19,18 +33,18 @@ int main(int argc, char* argv[]){
     bool print = false;
     bool bakingIceCreamInOven = false;
 
-    // variables you'll change
+    // variables of program options
     bool hi = false;
 
+    // variables of print subcommand
     bool verbose = false;
     std::string input = "";
     int printCycles = 1;
     double doublingEfforts = 1.0;
 
+    // variables of print bakeice subcommand
     int bakingIceNtimes = 1;
 
-
-    // The command line flags and options you wish
 
     CmdParser pars (
         argc,
@@ -40,14 +54,9 @@ int main(int argc, char* argv[]){
 
         },
         "example",
-        // Custom usage header for every subcommand
         "\nExample Program by Adam McKellar",
-        // Custom usage header for main program only.
-        "\nExample Program by Adam McKellar \n\nUsage:      example [Command] [Flags] [Input] \nExample:    example print -i abc -cycles 10 -d 0.5\n\nexample [subcommands] --help for more\n",
-
-        // Custom license notice.
-        "\nThis example program is licensed under CC0 1.0 apart from the used libraries\n",
-
+        programDescription,
+        licenseText,
         { // subcommands
             CmdParser(
                 {   
