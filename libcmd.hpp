@@ -11,6 +11,7 @@
 #ifndef LIB_CMD
 #define LIB_CMD
 
+#include <list>
 #include <vector>
 #include <tuple>
 #include <string>
@@ -25,9 +26,22 @@
 
 int SPACES = 12;
 
+std::string LICENSENOTICE = R"(
+This program uses the libcmd library:
+
+Copyright (C) 2023 Adam McKellar
+
+This Source Code Form is subject to the terms of the Mozilla Public
+License, v. 2.0. If a copy of the MPL was not distributed with this
+file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+The source code is obtainable at https://github.com/WyvernIXTL/libcmd
+)";
+
+
 /* ============================================================================================================================== */
 
-enum Type {BOOL, STRING, INT, DOUBLE};
+enum Type {BOOL, STRING, INT, DOUBLE, LAMBDA};
 
 /**
  * Class for handling Options.
@@ -52,11 +66,13 @@ public:
         int* pointerInt;
         double* pointerDouble;
     };  
+    std::function<void()> flagLambda;
 
     Option (bool* pointer, std::vector<std::string> hands, std::string description = "", std::vector<std::string> anonymousHands = {});
     Option (std::string* pointer, std::vector<std::string> hands, std::string description = "", std::vector<std::string> anonymousHands = {});
     Option (int* pointer, std::vector<std::string> hands, std::string description = "", std::vector<std::string> anonymousHands = {});
     Option (double* pointer, std::vector<std::string> hands, std::string description = "", std::vector<std::string> anonymousHands = {});
+    Option (std::function<void()> lambda, std::vector<std::string> hands, std::string description = "", std::vector<std::string> anonymousHands = {});
 
     Type getType();
     std::vector<std::string> getHands();
@@ -76,6 +92,9 @@ Option::Option (int* pointer, std::vector<std::string> hands, std::string descri
 
 Option::Option (double* pointer, std::vector<std::string> hands, std::string description, std::vector<std::string> anonymousHands)
         : _hands(hands), _description(description), _type(Type::DOUBLE), pointerDouble(pointer), _anonymousHands(anonymousHands) {}
+
+Option::Option (std::function<void()> lambda, std::vector<std::string> hands, std::string description, std::vector<std::string> anonymousHands)
+        : _hands(hands), _description(description), _type(Type::LAMBDA), flagLambda(lambda), _anonymousHands(anonymousHands) {}
 
 Type Option::getType() {
     return _type;
@@ -107,11 +126,18 @@ class cmdParser {
 private:
     int _argc;
     char** _argv;
-    std::vector<Option> _options;
+    std::list<Option> _options;
 
 public:
     cmdParser(int argc, char* argv[],
-        std::vector<Option> options);
+        std::list<Option> options
+        );
+
+    cmdParser(int argc, char* argv[],
+        std::list<Option> options, 
+        std::function<void()> printLicense,
+        std::function<void()> printUsage
+        );      
 
     void digest();
     void comfortDigest();
@@ -122,6 +148,52 @@ public:
 
 
 /* ============================================================================================================================== */
+
+/**
+ * @brief Construct a new cmd Parser::cmdParser object with default flags for Usage and Licenses.
+ * 
+ * @param argc Argument count of your main function (probably: "argc").
+ * @param argv Array of arguments given to your main function (probably: "argv").
+ * @param options Array or Vector of Option structs given to parse argv.
+ */
+cmdParser::cmdParser(int argc, char* argv[],
+                    std::list<Option> options
+                    )
+    : _argc(argc), _argv(argv), _options(options)
+{   
+    auto printLicense = [=](){ std::cout << LICENSENOTICE << std::endl; exit(0);};
+    auto printUsage = [this](){std::cout << "Usage:      program [Options]" << std::endl; printAll(); exit(0);};
+    if (this->isEmpty()) printUsage();
+    _options.push_front(Option(printLicense, {"--license"}, "Print licenses.", {"--License", "/License", "/license"}));
+    _options.push_front(Option(printUsage, {"-h", "--help"}, "Show this message.", {"/h"} ));
+}
+
+/**
+ * @brief Construct a new cmd Parser::cmdParser object with default flags.
+ * 
+ * @param argc Argument count of your main function (probably: "argc").
+ * @param argv Array of arguments given to your main function (probably: "argv").
+ * @param options Array or Vector of Option structs given to parse argv.
+ * @param printLicense Lambda expression of lambda executed on flag --license
+ * @param printUsage Lambda expression of lambda executed on flags -h --help
+ */
+cmdParser::cmdParser(int argc, char* argv[],
+                    std::list<Option> options, 
+                    std::function<void()> printLicense,
+                    std::function<void()> printUsage
+                    )
+    : _argc(argc), _argv(argv), _options(options)
+{
+    auto printUsageWithFlags = [&, this](){
+        printUsage();
+        printAll();
+        exit(0);
+    };
+    if (this->isEmpty()) printUsage();
+    _options.push_front(Option(printLicense, {"--license"}, "Print licenses.", {"--License", "/License", "/license"}));
+    _options.push_front(Option(printUsageWithFlags, {"-h", "--help"}, "Show this message.", {"/h"}));
+}
+
 
 /**
  * @brief Parse command line arguments.
@@ -149,6 +221,8 @@ void cmdParser::digest() {
         if (hand != opt.end()) {
             if (hand->second->getType() == BOOL) {
                 *(hand->second->pointerBool) = true;
+            } else if (hand->second->getType() == LAMBDA) {
+                hand->second->flagLambda();
             } else {
                 if (itr + 1 != _argv + _argc) {
                     if (opt.find(*(itr + 1)) == opt.end()) {
@@ -225,18 +299,6 @@ void cmdParser::comfortDigest() {
     }
 }
 
-/**
- * @brief Construct a new cmd Parser::cmd Parser object and parse right after.
- * 
- * @param argc Argument count of your main function (probably: "argc").
- * @param argv Array of arguments given to your main function (probably: "argv").
- * @param flags Array or Vector of Flag structs given to parse argv.
- * @param options Array or Vector of Option structs given to parse argv.
- */
-cmdParser::cmdParser(int argc, char* argv[],
-        std::vector<Option> options)
-    : _argc(argc), _argv(argv), _options(options)
-{}
 
 /**
  * @brief Return n white spaces.
@@ -279,11 +341,11 @@ std::string makeHandToString(std::vector<std::string> hand, int handsAmount, int
 /**
  * @brief Return the maximum of count of hands of a single Flag or Option of all Flag or Options.
  * 
- * @param options a vector of Options.
+ * @param options a list of Options.
  * @param include lambda or function deciding which Types to inlcude.
  * @return int Example: If the flag Help has the hands "-help", "--help", "-h", "-H" and has the most hands returns 4.
  */
-int getHandCount(std::vector<Option> options, std::function<bool(Type)> inlcude = [](Type a){return true;}) {
+int getHandCount(std::list<Option> options, std::function<bool(Type)> inlcude = [](Type a){return true;}) {
     auto max = [](auto a, auto b) {
         if(a > b)
             return a;
@@ -331,9 +393,9 @@ void cmdParser::printOptions(int spaces, std::string prefix, std::function<bool(
  * @param spaces the amount of spaces between hands.
  */
 void cmdParser::printAll(int spaces) {
-    printOptions(spaces, "FLAGS:", [](Type a){return a == BOOL;});
+    printOptions(spaces, "FLAGS:", [](Type a){return a == BOOL || a == LAMBDA;});
     std::cout << " " << std::endl;
-    printOptions(spaces, "OPTIONS:", [](Type a){return a != BOOL;});
+    printOptions(spaces, "OPTIONS:", [](Type a){return a != BOOL && a != LAMBDA;});
 }
 
 

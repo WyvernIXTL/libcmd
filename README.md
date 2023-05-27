@@ -9,7 +9,6 @@ A simple, portable library for parsing command line arguments in C++.
 
 int main(int argc, char* argv[]) {
 
-      bool help = false;
       bool verbose = false;
       std::string inputString = "";
       int inputInteger = 0;
@@ -19,27 +18,20 @@ int main(int argc, char* argv[]) {
             argc,
             argv,
             {     
-                  Option(&help, {"-h", "--help"}, "Shows this message", {"--Help", "-help", "-H"}),
                   Option(&verbose, {"--verbose"}),
 
                   Option(&inputString, {"-i", "--input"}, "input string"),
                   Option(&inputInteger, {"-n", "--number"}, "input integer"), 
-                  Option(&inputDouble, {"-d", "--double"}, "input double")
+                  Option(&inputDouble, {"-d", "--double"}, "input double", {"SomeOtherOptionNotShownInUsage", "-R"})
             }
       );
       
       pars.comfortDigest();
-
-      if (help || pars.isEmpty()) {
-            std::cout << "Usage:" << space(12 - 6) << "example [Flags/Options]" << std::endl;
-            pars.printAll();
-            exit(0);
-      }
 }
 ```
 
 ### Advanced
-Have a look at "example.cpp".
+Have a look at "example.cpp" (like overwritting default usage and license flags).
 
 ## Licensing
 * The file "libcmd.hpp" is licensed under the [MPL 2.0 license](https://mozilla.org/MPL/2.0/).

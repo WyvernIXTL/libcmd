@@ -36,36 +36,36 @@ int main(int argc, char* argv[]){
     } catch(std::logic_error const&){}
 
     //variables you'll change
-    bool help = false;
     bool verbose = false;
     std::string input = "";
     int printCycles = 1;
     double doublingEfforts = 1.0;
 
+
     // The command line flags and options you wish
-    // do not forget those , , , , 
 
     cmdParser pars (
         argc - frontOffset - backOffset,
         argv + frontOffset,
         {
-            Option(&help, {"-h", "--help"}, "Shows this message", {"--Usage", "-H", "/H"}),
             Option(&verbose, {"--verbose"}), //description omited 
 
             Option(&input, {"-i", "--input"}, "input string which is then printed"),
-            Option(&printCycles, {"-cycles", "/Cycles"}, "the number of times input is printed"), 
+            Option(&printCycles, {"-cycles", "/Cycles"}, "the number of times input is printed", {"-c"}), 
             Option(&doublingEfforts, {"-d", "--double"}, "Double which acts as multiplier for Cycles")
+        },
+        [](){
+            std::cout << "\nThis example program is licensed under CC0 1.0 apart from the used libraries\n" << LICENSENOTICE << std::endl; 
+            exit(0);
+        },
+        [](){
+            std::cout << "\nExample Program by Adam McKellar\n" << std::endl;
+            std::cout << "Usage:" << space(12 - 6) << "example [Command] [Flags] [Input]" << std::endl;
+            std::cout << "Example:" << space(12 - 8) << "example Print -i abc -cycles 10 -d 0.5\n" << std::endl;
         }
     );
 
     pars.comfortDigest();
-
-    //print Usage when help is necessary
-    //You might want to change pars.isEmpty() to argc == 1
-    if(help || pars.isEmpty()){
-        Usage(pars);
-        return 0;
-    }
 
 
     if(mode == 1) {

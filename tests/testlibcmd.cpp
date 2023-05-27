@@ -17,7 +17,7 @@ TEST_CASE( "parseEmptyNoFlagsAndOptions", "[empty]" ) {
         cmdParser pars {
             argc,
             argv,
-            {}
+            {}, []{}, []{}
         };
         pars.digest();
     };
@@ -32,16 +32,16 @@ TEST_CASE( "parseGoodFlags", "[flags]" ) {
     bool verbose = false;
     bool flaggy = false;
 
-    const char* argv[] = {"programm", "--help", "wasd", nullptr};
+    const char* argv[] = {"programm", "--help2", "wasd", nullptr};
 
     cmdParser pars {
         3,
         const_cast<char**>(argv),
         {
-            Option(&help, {"-h", "--help", "--Usage"}, "Shows this message"),
+            Option(&help, {"-h2", "--help2", "--Usage2"}, "Shows this message"),
             Option(&verbose, {"--verbose"}),
             Option(&flaggy, {"wasd"})
-        }
+        }, []{}, []{}
     };
     pars.digest();
 
@@ -67,7 +67,7 @@ TEST_CASE( "parseGoodOptions", "[options]" ) {
                 Option(&inputStr, {"-s", "--string"}, "input string"),
                 Option(&inputInt, {"-i", "--int"}, "input int"),
                 Option(&inputDouble, {"-d", "--double"}, "input double"),
-            }
+            }, []{}, []{}
         };
         pars.digest();
 
@@ -87,7 +87,7 @@ TEST_CASE( "parseGoodOptions", "[options]" ) {
             {
                 Option(&inputInt, {"-i", "--int"}, "input int"),
                 Option(&inputDouble, {"-d", "--double"}, "input double"),
-            }
+            }, []{}, []{}
         };
         pars.digest();
 
@@ -109,7 +109,7 @@ TEST_CASE( "parseGoodOptions", "[options]" ) {
                 Option(&inputStr, {"-s", "--string"}, "input string"),
                 Option(&inputInt, {"-i", "--int"}, "input int"),
                 Option(&inputDouble, {"-d", "--double"}, "input double"),
-            }
+            }, []{}, []{}
         };
         pars.digest();
 
@@ -138,7 +138,7 @@ TEST_CASE( "parseAnonymousOptions", "[anonoptions]") {
                 Option(&inputStr, {}, "input string", {"-s", "--string"}),
                 Option(&inputInt, {}, "input int", {"-i", "--int"}),
                 Option(&inputDouble, {}, "input double", {"-d", "--double"}),
-            }
+            }, []{}, []{}
         };
         pars.digest();
 
@@ -164,7 +164,7 @@ TEST_CASE( "parseBadOptions", "[badoptions]" ) {
             {
                 Option(&inputStr, {"-s", "--string"}, "input string"),
                 Option(&inputStr2, {"-s2", "--string2"}, "input string"),
-            }
+            }, []{}, []{}
         };
         pars.digest();
 
@@ -182,7 +182,7 @@ TEST_CASE( "parseBadOptions", "[badoptions]" ) {
             const_cast<char**>(argv),
             {
                 Option(&inputInt, {"-i", "--int"}, "input int"),
-            }
+            }, []{}, []{}
         };
 
         REQUIRE_THROWS(pars.digest());        
@@ -198,7 +198,7 @@ TEST_CASE( "parseBadOptions", "[badoptions]" ) {
             const_cast<char**>(argv),
             {
                 Option(&inputDouble, {"-d", "--double"}, "input double"),
-            }
+            }, []{}, []{}
         };
 
         REQUIRE_THROWS(pars.digest());        
@@ -214,7 +214,7 @@ TEST_CASE( "parseBadOptions", "[badoptions]" ) {
             const_cast<char**>(argv),
             {
                 Option(&inputStr, {"-s", "--string"}, "input string"),
-            }
+            }, []{}, []{}
         };
 
         REQUIRE_THROWS(pars.digest());
