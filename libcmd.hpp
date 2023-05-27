@@ -129,10 +129,10 @@ private:
     char** _argv;
 
     std::string _commandName;
-    std::string _globalUsageHeader;
-    std::string _programDescriptionLong;
-    std::string _commandDescription;
-    std::string _subcommandHereHelpString;
+    std::string _subCommandUsageHeader;
+    std::string _programDescription;
+    std::string _subCommandDescription;
+    std::string _subCommandCascadeString;
     bool* _wasCommandCalled;
     std::vector<CmdParser> _subCommands;
     std::list<Option> _options;
@@ -171,41 +171,46 @@ public:
 
 /* ============================================================================================================================== */
 
+
 /**
- * @brief Construct a new cmd Parser::cmdParser object for testing purposes without any help or license text.
+ * @brief Construct a new cmd Parser::cmdParser object for testing purposes without any help or license text and flags. This barebone constructer will result in undefined behaviour!
  * 
  * @param argc Argument count of your main function (probably: "argc").
  * @param argv Array of arguments given to your main function (probably: "argv").
- * @param options Array or Vector of Option structs given to parse argv.
+ * @param options Array or Vector of Option class given to parse argv.
  */
 CmdParser::CmdParser(int argc, char* argv[],
                     std::list<Option> options,
                     std::vector<CmdParser> subCommands
                     )
-    : _argc(argc), _argv(argv), _options(options), _commandName("program"), _subCommands(subCommands), _wasCommandCalled(nullptr), _subcommandHereHelpString("program"), _globalUsageHeader("")
+    : _argc(argc), _argv(argv), _options(options), _commandName("program"), _subCommands(subCommands), _wasCommandCalled(nullptr), _subCommandCascadeString("program"), _subCommandUsageHeader("")
 {}
 
+
 /**
- * @brief Construct a new cmd Parser::cmdParser object with default flags.
+ * @brief Construct a new Cmd Parser:: Cmd Parser object  This should be the starting point in your main function.
  * 
  * @param argc Argument count of your main function (probably: "argc").
  * @param argv Array of arguments given to your main function (probably: "argv").
- * @param options Array or Vector of Option structs given to parse argv.
- * @param printLicense Lambda expression of lambda executed on flag --license
- * @param printUsage Lambda expression of lambda executed on flags -h --help
+ * @param options List/Array of Options given to be parsed. (not for subcommands).
+ * @param programName The name of your program.
+ * @param subCommandUsageHeader Usage or notice used for all subcommands. Make it short!
+ * @param programDescription Description and usage displayed by your programs --help flag.
+ * @param licenseText Text displayed for flag --license.
+ * @param subCommands Array of CmdParser which will act as subcommands.
  */
 CmdParser::CmdParser(int argc, char* argv[],
                     std::list<Option> options,
-                    std::string commandName,
+                    std::string programName,
+                    std::string subCommandUsageHeader,
                     std::string programDescription,
-                    std::string programDescriptionLong,
                     std::string licenseText,
                     std::vector<CmdParser> subCommands
                     )
-    : _argc(argc), _argv(argv), _options(options), _commandName(commandName), _subCommands(subCommands), _wasCommandCalled(nullptr), _subcommandHereHelpString(commandName), _globalUsageHeader(programDescription), _programDescriptionLong(programDescriptionLong)
+    : _argc(argc), _argv(argv), _options(options), _commandName(programName), _subCommands(subCommands), _wasCommandCalled(nullptr), _subCommandCascadeString(programName), _subCommandUsageHeader(subCommandUsageHeader), _programDescription(programDescription)
 {
-    auto printUsageWithFlags = [&, this](void* self){
-        std::cout << ((CmdParser*) self)->_programDescriptionLong << std::endl;
+    auto printHelp = [&, this](void* self){
+        std::cout << ((CmdParser*) self)->_programDescription << std::endl;
         ((CmdParser*) self)->printAll();
         exit(0);
     };
@@ -213,21 +218,31 @@ CmdParser::CmdParser(int argc, char* argv[],
         std::cout << licenseText << "\n" << LICENSENOTICE << std::endl;
         exit(0);
     };
-    if (this->isEmpty()) printUsageWithFlags(this);
+    if (this->isEmpty()) printHelp(this);
     _options.push_front(Option(printLicense, {"--license"}, "Print licenses.", {"--License", "/License", "/license"}));
-    _options.push_front(Option(printUsageWithFlags, {"-h", "--help"}, "Show this message.", {"/h"}));
+    _options.push_front(Option(printHelp, {"-h", "--help"}, "Show this message.", {"/h"}));
 }
 
+
+/**
+ * @brief Construct a new Cmd Parser:: Cmd Parser object  This should only be used for subcommands. 
+ * 
+ * @param options List/Array of Options given to be parsed for this SubCommand.
+ * @param commandName SubCommand name.
+ * @param wasCommandCalled Pointer to bool, which will be set to true if the subcommand is the subcommand called.
+ * @param subCommands SubCommands of this SubCommand. If one of them is called => !wasCommandCalled
+ * @param commandDescription Description of SubCommand printed by printAll().
+ */
 CmdParser::CmdParser(std::list<Option> options,
                     std::string commandName,
                     bool* wasCommandCalled,
                     std::vector<CmdParser> subCommands,
                     std::string commandDescription
                     )
-                    : _options(options), _commandName(commandName), _wasCommandCalled(wasCommandCalled), _subCommands(subCommands), _commandDescription(commandDescription) 
+                    : _options(options), _commandName(commandName), _wasCommandCalled(wasCommandCalled), _subCommands(subCommands), _subCommandDescription(commandDescription) 
 {
     auto printHelp = [&](void* self){
-        std::cout << ((CmdParser*) self)->_globalUsageHeader << std::endl;
+        std::cout << ((CmdParser*) self)->_subCommandUsageHeader << std::endl;
         ((CmdParser*) self)->printAll();
         exit(0);
     };
@@ -252,8 +267,8 @@ void CmdParser::digest() {
                 if (_wasCommandCalled) { *_wasCommandCalled = false; }
                 subCommand._argc = _argc - 1;
                 subCommand._argv = _argv + 1;
-                subCommand._subcommandHereHelpString = _subcommandHereHelpString + " " + subCommand._commandName;
-                subCommand._globalUsageHeader = _globalUsageHeader;
+                subCommand._subCommandCascadeString = _subCommandCascadeString + " " + subCommand._commandName;
+                subCommand._subCommandUsageHeader = _subCommandUsageHeader;
                 subCommand.digest();
                 return;
             }
@@ -448,7 +463,7 @@ void CmdParser::printOptions(int spaces, std::string prefix, std::function<bool(
  * @param spaces the amount of spaces between hands.
  */
 void CmdParser::printAll(int spaces, bool andExit) {
-    std::cout << "\nUsage for: " << _subcommandHereHelpString << "\n" << std::endl;
+    std::cout << "\nUsage for: " << _subCommandCascadeString << "\n" << std::endl;
 
     printOptions(spaces, "Flags:", [](Type a){return a == BOOL || a == LAMBDA;});
     std::cout << " " << std::endl;
@@ -457,12 +472,12 @@ void CmdParser::printAll(int spaces, bool andExit) {
     for (int i = 0; i < _subCommands.size(); ++i) {
         if (i == 0) std::cout << "\nSubcmd:" << space(spaces - 7);
         else std::cout << space(spaces);
-        std::cout << _subCommands[i]._commandName << space(spaces*2 - int(_subCommands[i]._commandName.length())) << _subCommands[i]._commandDescription << std::endl;
+        std::cout << _subCommands[i]._commandName << space(spaces*2 - int(_subCommands[i]._commandName.length())) << _subCommands[i]._subCommandDescription << std::endl;
     }
     if (_subCommands.size() == 1)
-        std::cout << "\nFor more help: " << _subcommandHereHelpString << " " << _subCommands[0]._commandName << " --help\n" << std::endl;
+        std::cout << "\nFor more help: " << _subCommandCascadeString << " " << _subCommands[0]._commandName << " --help\n" << std::endl;
     if (_subCommands.size() > 1)
-        std::cout << "\nFor more help: " << _subcommandHereHelpString << " [subcmd] --help\n" << std::endl;
+        std::cout << "\nFor more help: " << _subCommandCascadeString << " [subcmd] --help\n" << std::endl;
     
     if (andExit) exit(0);
 }
