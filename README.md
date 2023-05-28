@@ -51,7 +51,7 @@ int main(int argc, char* argv[]) {
                   Option(&inputInteger, {"-n", "--number"}, "input integer"), 
                   Option(&inputDouble, {"-d", "--double"}, "input double", {"SomeOtherOptionNotShownInUsage", "-R"})
             },
-            "program name",
+            "programname",
             "",
             "This is the description people see, when your programs usage is shown.",
             "Here you can input your copyright notice and license information (for example of all libraries used)"
@@ -64,7 +64,7 @@ The above code results in:
 ```
 This is the description people see, when your programs usage is shown.
 
-Usage for: program name
+Usage for: programname
 
 Flags:      -h          --help      Show this message.
             --license               Print licenses.
@@ -98,7 +98,7 @@ int main(int argc, char* argv[]) {
                   Option(&inputInteger, {"-n", "--number"}, "input integer"), 
                   Option(&inputDouble, {"-d", "--double"}, "input double", {"SomeOtherOptionNotShownInUsage", "-R"})
             },
-            "program name",
+            "programname",
             "Description of program shown above help message of all subcommands. (make it short)",
             "This is the description people see, when your programs usage is shown.",
             "Here you can input your copyright notice and license information (for example of all libraries used)",
@@ -125,7 +125,7 @@ This results in:
 ```
 This is the description people see, when your programs usage is shown.
 
-Usage for: program name
+Usage for: programname
 
 Flags:      -h          --help      Show this message.
             --license               Print licenses.
@@ -137,7 +137,7 @@ Options:    -i          --input     input string
 
 Subcmd:     mysubcommand            Description of your subcommand (1 line)
 
-For more help: program name mysubcommand --help
+For more help: programname mysubcommand --help
 ```
 
 Your can have as many SubCommands as you like. SubCommands also can have SubCommands, LABEL: which  also can have SubCommands, goto LABEL;
@@ -156,7 +156,7 @@ Your can have as many SubCommands as you like. SubCommands also can have SubComm
 4. Lint your code ([cppcheck](https://cppcheck.sourceforge.io/))(nvmd cpcheck kills me)
 5. Head to tests and build via cmake (`cd tests && cmake . -B ./build/ && cd ./build/`)
 6. Build the tests and test (on windows `msbuild ./Project.sln && ./Debug/tests.exe`)
-7. Commit your changes (`git commit -am -S 'Add some feature'`)
+7. Commit your changes (`git commit -S -am 'Add some feature'`)
 8. Push to the branch (`git push origin my-new-feature`)
 9. Create a new Pull Request
 
