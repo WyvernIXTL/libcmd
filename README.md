@@ -66,7 +66,9 @@ This is the description people see, when your programs usage is shown.
 
 Usage for: program name
 
-Flags:      --verbose
+Flags:      -h          --help      Show this message.
+            --license               Print licenses.
+            --verbose
 
 Options:    -i          --input     input string
             -n          --number    input integer
@@ -125,7 +127,9 @@ This is the description people see, when your programs usage is shown.
 
 Usage for: program name
 
-Flags:      --verbose
+Flags:      -h          --help      Show this message.
+            --license               Print licenses.
+            --verbose
 
 Options:    -i          --input     input string
             -n          --number    input integer

@@ -30,7 +30,7 @@ This program uses the libcmd library:
 
 Copyright (C) 2023 Adam McKellar
 
-This Source Code Form is subject to the terms of the Mozilla Public
+libcmd library is subject to the terms of the Mozilla Public
 License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
@@ -241,9 +241,9 @@ CmdParserFrame::CmdParserFrame(int argc, char* argv[],
         std::cout << licenseText << "\n" << LICENSENOTICE << std::endl;
         exit(0);
     };
-    if (this->isEmpty()) printHelp(this);
     _options.push_front(Option(printLicense, {"--license"}, "Print licenses.", {"--License", "/License", "/license"}));
     _options.push_front(Option(printHelp, {"-h", "--help"}, "Show this message.", {"/h"}));
+    if (this->isEmpty()) printHelp(this);
 }
 
 
