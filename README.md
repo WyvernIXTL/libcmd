@@ -153,7 +153,7 @@ Your can have as many SubCommands as you like. SubCommands also can have SubComm
 1. Fork it (<https://github.com/WyvernIXTL/libcmd/fork>)
 2. Create your feature branch (`git checkout -b my-new-feature`)
 3. Add your feature.
-4. Lint your code ([cppcheck](https://cppcheck.sourceforge.io/))
+4. Lint your code ([cppcheck](https://cppcheck.sourceforge.io/))(nvmd cpcheck kills me)
 5. Head to tests and build via cmake (`cd tests && cmake . -B ./build/ && cd ./build/`)
 6. Build the tests and test (on windows `msbuild ./Project.sln && ./Debug/tests.exe`)
 7. Commit your changes (`git commit -am -S 'Add some feature'`)

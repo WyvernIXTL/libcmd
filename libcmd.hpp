@@ -462,7 +462,7 @@ int getHandCount(std::list<Option> options, std::function<bool(Type)> inlcude = 
     for(auto option : options) {
         if (!inlcude(option.getType())) continue;        
         int count = 0;
-        for(auto hand : option.getHands()) {
+        for(auto& hand : option.getHands()) {
             count++;
         }
         highest = max(highest, count);
