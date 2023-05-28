@@ -14,7 +14,7 @@
 
 TEST_CASE( "parseEmptyNoFlagsAndOptions", "[empty]" ) {
     auto executor = [](int argc, char** argv) {
-        CmdParser pars {
+        CmdParserFrame pars {
             argc,
             argv,
             {}
@@ -34,7 +34,7 @@ TEST_CASE( "parseGoodFlags", "[flags]" ) {
 
     const char* argv[] = {"programm", "--help2", "wasd", nullptr};
 
-    CmdParser pars {
+    CmdParserFrame pars {
         3,
         const_cast<char**>(argv),
         {
@@ -60,7 +60,7 @@ TEST_CASE( "parseGoodOptions", "[options]" ) {
 
         const char* argv[] = {"programm", "-s", "wasd", "-i", "345", "-d", "345.678", nullptr};
 
-        CmdParser pars {
+        CmdParserFrame pars {
             7,
             const_cast<char**>(argv),
             {
@@ -81,7 +81,7 @@ TEST_CASE( "parseGoodOptions", "[options]" ) {
 
         const char* argv[] = {"programm", "-i", "-345", "-d", "-345.678", nullptr};
 
-        CmdParser pars {
+        CmdParserFrame pars {
             5,
             const_cast<char**>(argv),
             {
@@ -102,7 +102,7 @@ TEST_CASE( "parseGoodOptions", "[options]" ) {
 
         const char* argv[] = {"programm", "-s", "wasd", "-s", "qwertz", nullptr};
 
-        CmdParser pars {
+        CmdParserFrame pars {
             5,
             const_cast<char**>(argv),
             {
@@ -130,7 +130,7 @@ TEST_CASE( "parseAnonymousOptions", "[anonoptions]") {
 
         const char* argv[] = {"programm", "-s", "wasd", "-i", "345", "-d", "345.678", "-vlog", nullptr};
 
-        CmdParser pars {
+        CmdParserFrame pars {
             8,
             const_cast<char**>(argv),
             {   
@@ -158,7 +158,7 @@ TEST_CASE( "parseBadOptions", "[badoptions]" ) {
         std::string inputStr = "NONE";
         std::string inputStr2 = "NONE";
 
-        CmdParser pars {
+        CmdParserFrame pars {
             4,
             const_cast<char**>(argv),
             {
@@ -177,7 +177,7 @@ TEST_CASE( "parseBadOptions", "[badoptions]" ) {
 
         int inputInt = 0;
 
-        CmdParser pars {
+        CmdParserFrame pars {
             3,
             const_cast<char**>(argv),
             {
@@ -193,7 +193,7 @@ TEST_CASE( "parseBadOptions", "[badoptions]" ) {
 
         double inputDouble = 0.0;
 
-        CmdParser pars {
+        CmdParserFrame pars {
             3,
             const_cast<char**>(argv),
             {
@@ -209,7 +209,7 @@ TEST_CASE( "parseBadOptions", "[badoptions]" ) {
 
         const char* argv[] = {"programm", "-s", "wasd", "unkown", "-s", "qwertz", nullptr};
 
-        CmdParser pars {
+        CmdParserFrame pars {
             6,
             const_cast<char**>(argv),
             {
@@ -231,14 +231,14 @@ TEST_CASE( "parseSubcommands", "parsesubcommands" ) {
 
         const char* argv[] = {"programm", "sub", "-s", "wasd", nullptr};
 
-        CmdParser pars {
+        CmdParserFrame pars {
             4,
             const_cast<char**>(argv),
             {
                 Option(&inputStr, {"-s", "--string"}, "input string")
             },
             {
-                CmdParser(
+                CmdParserFrame(
                     {
                         Option(&inputStr, {"-s", "--string"}, "input string")
                     },
@@ -266,28 +266,28 @@ TEST_CASE( "parseSubcommands", "parsesubcommands" ) {
 
         const char* argv[] = {"programm", "sub", "BAHWA", "-s2", "wasd", "--num", "6", "--dub", "345.567", "--flag",  nullptr};
 
-        CmdParser pars {
+        CmdParserFrame pars {
             10,
             const_cast<char**>(argv),
             {
                 Option(&inputStr, {"-s", "--string"}, "input string")
             },
             {
-                CmdParser(
+                CmdParserFrame(
                     {
                         Option(&inputStr, {"-s", "--string"}, "input string")
                     },
                     "sub",
                     &subGotCalled,
                     {
-                        CmdParser(
+                        CmdParserFrame(
                             {
                                 Option(&inputStr, {"-s2", "--string2"}, "input string")
                             },
                             "buhu",
                             &buhuGotCalled
                         ),
-                        CmdParser(
+                        CmdParserFrame(
                             {
                                 Option(&inputStr, {"-s2", "--string2"}, "input string"),
                                 Option(&num, {"--num"}),
@@ -324,26 +324,26 @@ TEST_CASE( "parseSubcommands", "parsesubcommands" ) {
 
         const char* argv[] = {"programm", "sub", "subsub", "BAHWA", "-s2", "wasd", "--num", "6", "--dub", "345.567", "--flag",  nullptr};
 
-        CmdParser pars {
+        CmdParserFrame pars {
             11,
             const_cast<char**>(argv),
             {
                 Option(&inputStr, {"-s", "--string"}, "input string")
             },
             {
-                CmdParser(
+                CmdParserFrame(
                     {
                         Option(&inputStr, {"-s", "--string"}, "input string")
                     },
                     "sub",
                     &subGotCalled,
                     {
-                        CmdParser(
+                        CmdParserFrame(
                             {},
                             "subsub",
                             nullptr,
                             {
-                                CmdParser(
+                                CmdParserFrame(
                                     {
                                         Option(&inputStr, {"-s2", "--string2"}, "input string"),
                                         Option(&num, {"--num"}),

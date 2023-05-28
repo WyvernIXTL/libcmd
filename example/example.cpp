@@ -9,6 +9,8 @@
 #include "../libcmd.hpp"
 
 
+// === Just replace this jank with your own jank ===
+
 std::string programDescription = R"(
 Example Program by Adam McKellar
 
@@ -24,6 +26,9 @@ This example program is licensed under CC0 1.0 apart from the used libraries
 
 
 int main(int argc, char* argv[]){
+
+
+    // === Variables where the parsed arguments are stored ===
 
     // control flow variables
     // is only true if command was called
@@ -46,19 +51,20 @@ int main(int argc, char* argv[]){
     int bakingIceNtimes = 1;
 
 
+    // === CLI argument parser with subcommands ===
+
     CmdParser pars (
         argc,
         argv,
         {
-            Option(&hi, {"--hi"}) //description omited 
-
+            Option(&hi, {"--hi"})
         },
         "example",
         "\nExample Program by Adam McKellar",
         programDescription,
         licenseText,
-        { // subcommands
-            CmdParser(
+        { 
+            SubCommand(
                 {   
                     Option(&verbose, {"--verbose"}),
                     Option(&input, {"-i", "--input"}, "input string which is then printed"),
@@ -67,8 +73,8 @@ int main(int argc, char* argv[]){
                 },
                 "print",
                 &print,
-                {   // subsubcommands
-                    CmdParser(
+                {   
+                    SubCommand(
                         {
                             Option(&bakingIceNtimes, {"-n", "--num"}, "baking my iceee n times", {"-times", "--times"})
                         },
@@ -85,6 +91,8 @@ int main(int argc, char* argv[]){
 
     pars.comfortDigest();
 
+
+    // === Do stuff with your parsed arguments ===
 
     if(print) {
         if(input != ""){
