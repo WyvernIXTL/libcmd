@@ -144,5 +144,22 @@ Your can have as many SubCommands as you like. SubCommands also can have SubComm
 
 
 ## Licensing
-* The file "libcmd.hpp" is licensed under the [MPL 2.0 license](https://mozilla.org/MPL/2.0/).
+
+* The files "libcmd.hpp", "testlibcmd.cpp" are licensed under the [**ISC License**](https://spdx.org/licenses/ISC.html).
 * The file "example.cpp" and the examples above are under the terms of [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/).
+
+## Contributing
+
+1. Fork it (<https://github.com/WyvernIXTL/libcmd/fork>)
+2. Create your feature branch (`git checkout -b my-new-feature`)
+3. Add your feature.
+4. Lint your code ([cppcheck](https://cppcheck.sourceforge.io/))
+5. Head to tests and build via cmake (`cd tests && cmake . -B ./build/ && cd ./build/`)
+6. Build the tests and test (on windows `msbuild ./Project.sln && ./Debug/tests.exe`)
+7. Commit your changes (`git commit -am -S 'Add some feature'`)
+8. Push to the branch (`git push origin my-new-feature`)
+9. Create a new Pull Request
+
+## Contributors
+
+- [Adam McKellar](https://github.com/WyvernIXTL) - creator and maintainer

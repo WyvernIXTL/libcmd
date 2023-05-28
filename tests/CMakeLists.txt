@@ -1,3 +1,7 @@
+
+#[[ Any copyright is dedicated to the Public Domain.
+    https://creativecommons.org/publicdomain/zero/1.0/ ]]
+
 cmake_minimum_required(VERSION 3.1)
 Project(TestLibCMD)
 set (CMAKE_CXX_STANDARD 20)
