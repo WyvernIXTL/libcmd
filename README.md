@@ -1,8 +1,15 @@
 # libcmd
+
 A simple, portable library for parsing command line arguments in C++.
 
+> [!WARNING]
+> This library kinda sucks. There are many problems worth fixing.
+
+
 ## Examples
+
 ### Bare Bone Version
+
 In this example there are only flags/options parsed. There is no help message, no license message and no subcommands.
 ```cpp
 #include "libcmd.hpp"
@@ -29,8 +36,13 @@ int main(int argc, char* argv[]) {
       pars.comfortDigest();
 }
 ```
-NOTICE: CmdParserFrame is jank... just use the examples below instead.
+
+> [!NOTE]
+> `CmdParserFrame` is jank... just use the examples below instead.
+
+
 ### With Comfort Functions
+
 ```cpp
 #include "libcmd.hpp"
 
@@ -75,7 +87,9 @@ Options:    -i          --input     input string
             -d          --double    input double
 ```
 
+
 ### With Subcommands
+
 ```cpp
 #include "libcmd.hpp"
 
@@ -121,7 +135,9 @@ int main(int argc, char* argv[]) {
       pars.comfortDigest();
 }
 ```
+
 This results in:
+
 ```
 This is the description people see, when your programs usage is shown.
 
@@ -148,6 +164,7 @@ Your can have as many SubCommands as you like. SubCommands also can have SubComm
 * The files "libcmd.hpp", "testlibcmd.cpp" are licensed under the [**ISC License**](https://spdx.org/licenses/ISC.html).
 * The file "example.cpp" and the examples above are under the terms of [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/).
 
+
 ## Contributing
 
 1. Fork it (<https://github.com/WyvernIXTL/libcmd/fork>)
@@ -159,6 +176,7 @@ Your can have as many SubCommands as you like. SubCommands also can have SubComm
 7. Commit your changes (`git commit -S -am 'Add some feature'`)
 8. Push to the branch (`git push origin my-new-feature`)
 9. Create a new Pull Request
+
 
 ## Contributors
 
